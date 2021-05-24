@@ -22,6 +22,7 @@ if (BUILD_STRICT)
     set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++XX rather than -std=gnu++XX
 endif()
 
+include(${CMAKE_CURRENT_LIST_DIR}/3rdparty/pfs/common/library.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/library.cmake)
 
 if (BUILD_TESTS)
