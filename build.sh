@@ -107,7 +107,7 @@ if [ -d .git ] ; then
     cd ..
 fi
 
-if [ -z "$SOURCE_DIR"] ; then
+if [ -z "$SOURCE_DIR" ] ; then
     if [ -d src/.git ] ; then
         SOURCE_DIR=`pwd`/src
     else

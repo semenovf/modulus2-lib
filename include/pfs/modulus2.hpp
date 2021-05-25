@@ -9,8 +9,8 @@
 #pragma once
 #include "pfs/emitter.hpp"
 #include "pfs/function_queue.hpp"
+#include "pfs/memory.hpp"
 #include <map>
-#include <memory>
 #include <string>
 #include <utility>
 
@@ -55,18 +55,6 @@ struct modulus2
     using function_queue_type = function_queue<>;
     using module_name_type = std::pair<string_type, string_type>;
 
-#if __cplusplus > 201103L
-    using std::make_unique;
-#else
-    // see [std::make_unique](http://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique)
-    // `Possible Implementation` section.
-    template<typename T, typename ...Args>
-    static inline std::unique_ptr<T> make_unique (Args &&... args)
-    {
-        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-    }
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 // concat
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +69,6 @@ struct modulus2
     {
         return lexical_caster<string_type>{}(arg) + concat(args...);
     }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Forward declarations
@@ -338,50 +325,58 @@ struct modulus2
     private:
         void direct_print_info (basic_module const * m, string_type const & s)
         {
-            _plog->info(m != 0 ? m->name() + ": " + s : s);
+            // FIXME
+            //_plog->info(m != 0 ? m->name() + ": " + s : s);
         }
 
         void direct_print_debug (basic_module const * m, string_type const & s)
         {
-            _plog->debug(m != 0 ? m->name() + ": " + s : s);
+            // FIXME
+            //_plog->debug(m != 0 ? m->name() + ": " + s : s);
         }
 
         void direct_print_warn (basic_module const * m, string_type const & s)
         {
-            _plog->warn(m != 0 ? m->name() + ": " + s : s);
+            // FIXME
+            //_plog->warn(m != 0 ? m->name() + ": " + s : s);
         }
 
         void direct_print_error (basic_module const * m, string_type const & s)
         {
-            _plog->error(m != 0 ? m->name() + ": " + s : s);
+            // FIXME
+            //_plog->error(m != 0 ? m->name() + ": " + s : s);
         }
 
         void queued_print_info (basic_module const * m, string_type const & s)
         {
-            this->_queue_ptr->push(& logger_type::info
-                    , _plog
-                    , (m != 0 ? m->name() + ": " + s : s));
+            // FIXME
+            //this->_queue_ptr->push(& logger_type::info
+            //        , _plog
+            //        , (m != 0 ? m->name() + ": " + s : s));
         }
 
         void queued_print_debug (basic_module const * m, string_type const & s)
         {
-            this->_queue_ptr->push(& logger_type::debug
-                    , _plog
-                    , (m != 0 ? m->name() + ": " + s : s));
+            // FIXME
+//             this->_queue_ptr->push(& logger_type::debug
+//                     , _plog
+//                     , (m != 0 ? m->name() + ": " + s : s));
         }
 
         void queued_print_warn (basic_module const * m, string_type const & s)
         {
-            this->_queue_ptr->push(& logger_type::warn
-                    , _plog
-                    , (m != 0 ? m->name() + ": " + s : s));
+            // FIXME
+//             this->_queue_ptr->push(& logger_type::warn
+//                     , _plog
+//                     , (m != 0 ? m->name() + ": " + s : s));
         }
 
         void queued_print_error (basic_module const * m, string_type const & s)
         {
-            this->_queue_ptr->push(& logger_type::error
-                    , _plog
-                    , (m != 0 ? m->name() + ": " + s : s));
+            // FIXME
+//             this->_queue_ptr->push(& logger_type::error
+//                     , _plog
+//                     , (m != 0 ? m->name() + ": " + s : s));
         }
 
         void connect_all ()
@@ -613,36 +608,37 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
         bool start ()
         {
-            assert(_psettings);
-
+            // FIXME
+//             assert(_psettings);
+//
             bool ok = true;
-
-            auto first = _module_spec_map.begin();
-            auto last  = _module_spec_map.end();
-
-            // Launch on_start() method for regular modules
-            for (; first != last; ++first) {
-                module_spec modspec = first->second;
-                std::shared_ptr<basic_module> pmodule = modspec.pmodule;
-
-                bool is_regular_module = !pmodule->is_slave()
-                    && !pmodule->use_queued_slots();
-
-                if (is_regular_module) {
-                    if (! pmodule->on_start_wrapper(*_psettings))
-                       ok = false;
-                    else
-                        this->module_started(pmodule->name());
-                }
-            }
-
-            // Redirect log ouput.
-            if (ok) {
-                info_printer  = & dispatcher::async_print_info;
-                debug_printer = & dispatcher::async_print_debug;
-                warn_printer  = & dispatcher::async_print_warn;
-                error_printer = & dispatcher::async_print_error;
-            }
+//
+//             auto first = _module_spec_map.begin();
+//             auto last  = _module_spec_map.end();
+//
+//             // Launch on_start() method for regular modules
+//             for (; first != last; ++first) {
+//                 module_spec modspec = first->second;
+//                 std::shared_ptr<basic_module> pmodule = modspec.pmodule;
+//
+//                 bool is_regular_module = !pmodule->is_slave()
+//                     && !pmodule->use_queued_slots();
+//
+//                 if (is_regular_module) {
+//                     if (! pmodule->on_start_wrapper(*_psettings))
+//                        ok = false;
+//                     else
+//                         this->module_started(pmodule->name());
+//                 }
+//             }
+//
+//             // Redirect log ouput.
+//             if (ok) {
+//                 info_printer  = & dispatcher::async_print_info;
+//                 debug_printer = & dispatcher::async_print_debug;
+//                 warn_printer  = & dispatcher::async_print_warn;
+//                 error_printer = & dispatcher::async_print_error;
+//             }
 
             return ok;
         }
@@ -657,6 +653,7 @@ struct modulus2
             // Connect detectors to declared emitters
             connect_all();
 
+            // FIXME
             auto success_start = start();
 
 //             if (success_start)

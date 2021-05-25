@@ -4,6 +4,9 @@
 ## Clone from github repository
 ```sh
 $ git clone https://github.com/semenovf/modulus2-lib.git modulus2
+
+# Update third-party dependecies
+$ git submodule update --init
 ```
 
 ## Build tests, examples, demos on Linux
