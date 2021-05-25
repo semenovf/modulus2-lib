@@ -40,13 +40,14 @@ inline std::string lexical_caster<std::string>::operator () (std::string const &
     return s;
 }
 
-template <typename ApiIdType = int
+template <typename ApiTraits
     , typename StringType = std::string
 >
 struct modulus2
 {
+    using api_traits_type = ApiTraits;
     using string_type = StringType;
-    using api_id_type = ApiIdType;
+    using api_id_type = typename api_traits_type::type;
 
     template <typename ...Args>
     using emitter_type = emitter_mt<Args...>;
@@ -172,10 +173,10 @@ struct modulus2
             _name = name;
         }
 
-        virtual void declare_emitters (dispatcher &)
+        virtual void declare_emitter (modulus2::api_id_type, dispatcher &)
         {}
 
-        virtual void connect_detectors (modulus2::api_id_type, dispatcher &)
+        virtual void connect_detector (modulus2::api_id_type, dispatcher &)
         {}
 
         // For regular module must return nullptr.
@@ -315,7 +316,7 @@ struct modulus2
         function_queue_type  _q;
         module_spec_map_type _module_specs;
 
-        std::unique_ptr<emitter_multimap_type> _emitters_mapping;
+        std::unique_ptr<emitter_multimap_type> _cached_emitters;
 
         void (dispatcher::*info_printer) (basic_module const * m, string_type const & s);
         void (dispatcher::*debug_printer) (basic_module const * m, string_type const & s);
@@ -379,36 +380,36 @@ struct modulus2
 //                     , (m != 0 ? m->name() + ": " + s : s));
         }
 
-        void connect_all ()
-        {
-            for (auto & modspec: _module_specs) {
-                auto * pmodule = & *modspec.second.pmodule;
-
-                for (auto & em: *_emitters_mapping) {
-                    auto id = em.first;
-                    pmodule->connect_detectors(id, *this);
-                }
-            }
-
-            // Emitters mapping is no longer needed
-            _emitters_mapping.reset();
-        }
+//         void connect_all ()
+//         {
+//             for (auto & modspec: _module_specs) {
+//                 auto * pmodule = & *modspec.second.pmodule;
+//
+//                 for (auto & em: *_emitters_mapping) {
+//                     auto id = em.first;
+//                     pmodule->connect_detectors(id, *this);
+//                 }
+//             }
+//
+//             // Emitters mapping is no longer needed
+//             _emitters_mapping.reset();
+//         }
 
         bool register_module_helper (module_name_type && name
             , module_spec && modspec)
         {
-            if (!_emitters_mapping) {
-                _emitters_mapping.reset(new emitter_multimap_type);
+            if (!_cached_emitters) {
+                _cached_emitters.reset(new emitter_multimap_type);
             }
-
-//             int nemitters, ndetectors;
-
-            if (!modspec.pmodule)
-                return false;
-
-            auto pmodule = & *modspec.pmodule;
+//
+// //             int nemitters, ndetectors;
+//
+//             if (!modspec.pmodule)
+//                 return false;
+//
+            auto registering_module_ptr = & *modspec.pmodule;
             auto const & module_name = name.first;
-            auto const & dep_module_name = name.second;
+            //auto const & dep_module_name = name.second;
 
             auto modspec_it = _module_specs.find(module_name);
 
@@ -417,53 +418,68 @@ struct modulus2
                 return false;
             }
 
-            pmodule->set_dispatcher(this);
-            pmodule->set_name(module_name);
+            registering_module_ptr->set_dispatcher(this);
+            registering_module_ptr->set_name(module_name);
 
-            // FIXME
-//             if (pmodule->use_queued_slots()) {
-//                 this->_runnable_modules.emplace_back(std::make_pair(& *modspec.pmodule
-//                     , static_cast<typename async_module::thread_function>(
-//                         & async_module::thread_function_wrapper)));
-//             } else {
-//                 if (pmodule->is_slave()) {
-//                     // Master is dispatcher
-//                     if (dep_module_name == "") {
-//                         std::static_pointer_cast<slave_module>(modspec.pmodule)
-//                             ->set_master(this);
-//                     } else {
-//                         basic_module * master = this->find_registered_module(dep_module_name);
-//
-//                         if (!master) {
-//                             log_error(concat(dep_module_name
-//                                 , string_type(": module not found")));
-//                             return false;
-//                         }
-//
-//                         if (!master->use_queued_slots()) {
-//                             log_error(concat(dep_module_name
-//                                 , string_type(": module must be asynchronous")));
-//                             return false;
-//                         }
-//
-//                         std::static_pointer_cast<slave_module>(modspec.pmodule)
-//                             ->set_master(static_cast<async_module *>(master));
-//                     }
+            api_traits_type api_traits{};
+
+            for (auto & modspec: _module_specs) {
+                auto * module_ptr = & *modspec.second.pmodule;
+
+                for (api_id_type id: api_traits) {
+                    std::cout << "Id: " << id << "\n";
+//                 for (auto & em: *_emitters_mapping) {
+//                     auto id = em.first;
+//                     pmodule->connect_detectors(id, *this);
 //                 }
-//             }
-
-            if (!pmodule->on_loaded()) {
-                log_error(concat(pmodule->name(), string_type(": on_loaded stage failed")));
-                return false;
+                }
             }
 
-            pmodule->declare_emitters(*this);
+//             // FIXME
+// //             if (pmodule->use_queued_slots()) {
+// //                 this->_runnable_modules.emplace_back(std::make_pair(& *modspec.pmodule
+// //                     , static_cast<typename async_module::thread_function>(
+// //                         & async_module::thread_function_wrapper)));
+// //             } else {
+// //                 if (pmodule->is_slave()) {
+// //                     // Master is dispatcher
+// //                     if (dep_module_name == "") {
+// //                         std::static_pointer_cast<slave_module>(modspec.pmodule)
+// //                             ->set_master(this);
+// //                     } else {
+// //                         basic_module * master = this->find_registered_module(dep_module_name);
+// //
+// //                         if (!master) {
+// //                             log_error(concat(dep_module_name
+// //                                 , string_type(": module not found")));
+// //                             return false;
+// //                         }
+// //
+// //                         if (!master->use_queued_slots()) {
+// //                             log_error(concat(dep_module_name
+// //                                 , string_type(": module must be asynchronous")));
+// //                             return false;
+// //                         }
+// //
+// //                         std::static_pointer_cast<slave_module>(modspec.pmodule)
+// //                             ->set_master(static_cast<async_module *>(master));
+// //                     }
+// //                 }
+// //             }
+//
+//             if (!pmodule->on_loaded()) {
+//                 log_error(concat(pmodule->name(), string_type(": on_loaded stage failed")));
+//                 return false;
+//             }
+//
+//             // FIXME
+//             //pmodule->declare_emitters(*this);
 
-            _module_specs.emplace(pmodule->name(), std::move(modspec));
-            log_debug(concat(pmodule->name(), string_type(": registered")));
+            _module_specs.emplace(registering_module_ptr->name(), std::move(modspec));
+            log_debug(concat(registering_module_ptr->name(), string_type(": registered")));
 
-            // Notify external subscribers
-            this->module_registered(pmodule->name());
+//             // Notify external subscribers
+//             this->module_registered(pmodule->name());
 
             return true;
         }
@@ -580,7 +596,8 @@ struct modulus2
         template <typename ...Args>
         void declare_emitter (api_id_type id, emitter_type<Args...> & em)
         {
-            _emitters_mapping->emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
+            // FIXME
+            //_emitters_mapping->emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
         }
 
         /**
@@ -591,16 +608,17 @@ struct modulus2
         void connect_detector (api_id_type id, ModuleClass & m
             , void (ModuleClass::*f) (Args...))
         {
-            auto range = _emitters_mapping->equal_range(id);
-
-            for (auto it = range.first; it != range.second; ++it) {
-                auto em = reinterpret_cast<emitter_type<Args...> *>(it->second);
-
-                if (m.queue())
-                    em->connect(*m.queue(), m, f);
-                else
-                    em->connect(m, f);
-            }
+            // FIXME
+//             auto range = _emitters_mapping->equal_range(id);
+//
+//             for (auto it = range.first; it != range.second; ++it) {
+//                 auto em = reinterpret_cast<emitter_type<Args...> *>(it->second);
+//
+//                 if (m.queue())
+//                     em->connect(*m.queue(), m, f);
+//                 else
+//                     em->connect(m, f);
+//             }
         }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -651,7 +669,7 @@ struct modulus2
             auto r = exit_status::failure;
 
             // Connect detectors to declared emitters
-            connect_all();
+            // connect_all();
 
             // FIXME
             auto success_start = start();

@@ -10,7 +10,23 @@
 #include "doctest.h"
 #include "pfs/modulus2.hpp"
 
-using modulus2 = pfs::modulus2<>;
+struct api_traits
+{
+    using type = int;
+//     std::array<type, 8> ids {0, 1, 2, 3, 4, 5, 6, 7};
+//
+//     auto begin () const -> std::array<type, 8>::const_iterator
+//     {
+//         return ids.begin();
+//     }
+//
+//     auto end () const -> std::array<type, 8>::const_iterator
+//     {
+//         return ids.end();
+//     }
+};
+
+using modulus2 = pfs::modulus2<api_traits>;
 
 struct Data
 {
@@ -32,17 +48,37 @@ class m1 : public modulus2::regular_module
 public:
     m1 () {}
 
-    virtual void declare_emitters (modulus2::dispatcher & d) override
+    virtual void declare_emitter (modulus2::api_id_type id
+        , modulus2::dispatcher & d) override
     {
         std::cout << "declare_emitters\n";
-        d.declare_emitter(0, emitZeroArg);
-        d.declare_emitter(1, emitOneArg);
-        d.declare_emitter(2, emitTwoArgs);
-        d.declare_emitter(3, emitThreeArgs);
-        d.declare_emitter(4, emitFourArgs);
-        d.declare_emitter(5, emitFiveArgs);
-        d.declare_emitter(6, emitSixArgs);
-        d.declare_emitter(7, emitData);
+
+        switch (id) {
+            case 0:
+                d.declare_emitter(id, emitZeroArg);
+                break;
+            case 1:
+                d.declare_emitter(id, emitOneArg);
+                break;
+            case 2:
+                d.declare_emitter(id, emitTwoArgs);
+                break;
+            case 3:
+                d.declare_emitter(id, emitThreeArgs);
+                break;
+            case 4:
+                d.declare_emitter(id, emitFourArgs);
+                break;
+            case 5:
+                d.declare_emitter(id, emitFiveArgs);
+                break;
+            case 6:
+                d.declare_emitter(id, emitSixArgs);
+                break;
+            case 7:
+                d.declare_emitter(id, emitData);
+                break;
+        }
     }
 };
 
@@ -53,7 +89,7 @@ class m2 : public modulus2::regular_module
 public:
     m2 (int) {}
 
-    virtual void connect_detectors (modulus2::api_id_type id
+    virtual void connect_detector (modulus2::api_id_type id
         , modulus2::dispatcher & d) override
     {
         std::cout << "Connect m2 detector for id: " << id << "\n";
