@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <cassert>
 
 namespace pfs {
 
@@ -40,14 +41,13 @@ inline std::string lexical_caster<std::string>::operator () (std::string const &
     return s;
 }
 
-template <typename ApiTraits
+template <typename ApiIdType = int
     , typename StringType = std::string
 >
 struct modulus2
 {
-    using api_traits_type = ApiTraits;
+    using api_id_type = ApiIdType;
     using string_type = StringType;
-    using api_id_type = typename api_traits_type::type;
 
     template <typename ...Args>
     using emitter_type = emitter_mt<Args...>;
@@ -75,6 +75,7 @@ struct modulus2
 // Forward declarations
 ////////////////////////////////////////////////////////////////////////////////
     class dispatcher;
+    class module_context;
     class basic_module;
     class regular_module;
     class runnable_module;
@@ -86,7 +87,8 @@ struct modulus2
     class basic_module // : public sigslot_ns::basic_slot_holder
     {
         friend class dispatcher;
-//
+        friend class module_context;
+
 //     public:
 //         using string_type = StringType;
 //         using emitter_mapper_pair = modulus::emitter_mapper_pair;
@@ -101,33 +103,33 @@ struct modulus2
 //
     protected:
         string_type  _name;
-        dispatcher * _pdispatcher {nullptr};
+        dispatcher * _dispatcher_ptr {nullptr};
 //         bool         _started = false;
 
 //     public:
 //         void quit ()
 //         {
-//             _pdispatcher->quit();
+//             _dispatcher_ptr->quit();
 //         }
 
         void log_info (string_type const & s)
         {
-            _pdispatcher->log_info(this, s);
+            _dispatcher_ptr->log_info(this, s);
         }
 
         void log_debug (string_type const & s)
         {
-            _pdispatcher->log_debug(this, s);
+            _dispatcher_ptr->log_debug(this, s);
         }
 
         void log_warn (string_type const & s)
         {
-            _pdispatcher->log_warn(this, s);
+            _dispatcher_ptr->log_warn(this, s);
         }
 
         void log_error (string_type const & s)
         {
-            _pdispatcher->log_error(this, s);
+            _dispatcher_ptr->log_error(this, s);
         }
 
 //         /**
@@ -137,7 +139,7 @@ struct modulus2
 //                 , double period
 //                 , typename timer_pool_type::callback_type && callback)
 //         {
-//             return _pdispatcher->acquire_timer(this
+//             return _dispatcher_ptr->acquire_timer(this
 //                     , delay
 //                     , period
 //                     , std::forward<typename timer_pool_type::callback_type>(callback));
@@ -150,13 +152,13 @@ struct modulus2
 //                 , double period
 //                 , typename timer_pool_type::callback_type && callback)
 //         {
-//             return _pdispatcher->acquire_timer(delay, period
+//             return _dispatcher_ptr->acquire_timer(delay, period
 //                     , std::forward<typename timer_pool_type::callback_type>(callback));
 //         }
 //
 //         inline void destroy_timer (timer_id id)
 //         {
-//             _pdispatcher->destroy_timer(id);
+//             _dispatcher_ptr->destroy_timer(id);
 //         }
 //
     protected:
@@ -165,7 +167,7 @@ struct modulus2
 
         void set_dispatcher (dispatcher * pdisp) noexcept
         {
-            _pdispatcher = pdisp;
+            _dispatcher_ptr = pdisp;
         }
 
         void set_name (string_type const & name) noexcept
@@ -173,10 +175,10 @@ struct modulus2
             _name = name;
         }
 
-        virtual void declare_emitter (modulus2::api_id_type, dispatcher &)
+        virtual void declare_emitters (module_context &)
         {}
 
-        virtual void connect_detector (modulus2::api_id_type, dispatcher &)
+        virtual void connect_detector (api_id_type, dispatcher &)
         {}
 
         // For regular module must return nullptr.
@@ -194,7 +196,7 @@ struct modulus2
 
 //         bool is_registered () const noexcept
 //         {
-//             return _pdispatcher != 0 ? true : false;
+//             return _dispatcher_ptr != 0 ? true : false;
 //         }
 //
 //         bool is_started () const noexcept
@@ -204,12 +206,12 @@ struct modulus2
 //
 //         dispatcher * get_dispatcher () noexcept
 //         {
-//             return _pdispatcher;
+//             return _dispatcher_ptr;
 //         }
 //
 //         dispatcher const * get_dispatcher () const noexcept
 //         {
-//             return _pdispatcher;
+//             return _dispatcher_ptr;
 //         }
 //
             // DEPRECATED
@@ -227,7 +229,7 @@ struct modulus2
 //
 //         bool is_quit () const
 //         {
-//             return _pdispatcher->is_quit();
+//             return _dispatcher_ptr->is_quit();
 //         }
 
     protected:
@@ -258,7 +260,7 @@ struct modulus2
 //             _started = this->on_start(settings);
 //
 //             if (! _started) {
-//                 _pdispatcher->log_error(concat(_name
+//                 _dispatcher_ptr->log_error(concat(_name
 //                     , string_type(": failed to start module")));
 //             }
 //
@@ -268,7 +270,7 @@ struct modulus2
 //         bool on_finish_wrapper ()
 //         {
 //             if (! this->on_finish()) {
-//                 _pdispatcher->log_warn(concat(_name
+//                 _dispatcher_ptr->log_warn(concat(_name
 //                     , string_type(": failed to finalize module")));
 //             }
 //
@@ -276,19 +278,53 @@ struct modulus2
 //         }
     }; // basic_module
 
-////////////////////////////////////////////////////////////////////////////////
-// module_spec
-////////////////////////////////////////////////////////////////////////////////
-    struct module_spec
+    ////////////////////////////////////////////////////////////////////////////
+    // module_contex
+    ////////////////////////////////////////////////////////////////////////////
+    class module_context
     {
-        // FIXME
-        std::unique_ptr<basic_module> pmodule;
-//         std::shared_ptr<dynamic_library> pdl;
-    }; // module_spec
+        //friend class dispatcher;
 
-////////////////////////////////////////////////////////////////////////////////
-// dispatcher
-////////////////////////////////////////////////////////////////////////////////
+        using emitter_cache_type = std::map<api_id_type, basic_emitter_type *>;
+
+        dispatcher *                  _dispather_ptr {nullptr};
+        std::unique_ptr<basic_module> _module_ptr;
+        string_type                   _parent_name;
+        emitter_cache_type            _emitter_cache;
+
+        // FIXME
+//         std::shared_ptr<dynamic_library> pdl;
+    public:
+        module_context (dispatcher & d
+                , string_type const & name
+                , string_type const & parent_name
+                , std::unique_ptr<basic_module> && m)
+            : _dispather_ptr(& d)
+            , _module_ptr(std::move(m))
+            , _parent_name(parent_name)
+        {
+            assert(_module_ptr);
+            _module_ptr->set_dispatcher(& d);
+            _module_ptr->set_name(name);
+            _module_ptr->declare_emitters(*this);
+        }
+
+        string_type const & name () const
+        {
+            return _module_ptr->name();
+        }
+
+        template <typename ...Args>
+        void declare_emitter (api_id_type id, emitter_type<Args...> & em)
+        {
+            std::cout << "-- Caching emitter [" << id << "] for " << _module_ptr->name() << "\n";
+            _emitter_cache.emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
+        }
+    }; // module_context
+
+    ////////////////////////////////////////////////////////////////////////////
+    // dispatcher
+    ////////////////////////////////////////////////////////////////////////////
     class dispatcher
     {
         friend class basic_module;
@@ -297,8 +333,8 @@ struct modulus2
         friend class slave_module;
 
         using string_type = modulus2::string_type;
-        using module_spec_map_type = std::map<string_type, module_spec>;
-        using emitter_multimap_type = std::multimap<api_id_type, basic_emitter_type *>;
+        using module_context_container_type = std::map<string_type, module_context>;
+        //using emitter_multimap_type = std::multimap<api_id_type, basic_emitter_type *>;
 
     public:
         enum class exit_status
@@ -314,9 +350,9 @@ struct modulus2
 
     private:
         function_queue_type  _q;
-        module_spec_map_type _module_specs;
+        module_context_container_type _module_specs;
 
-        std::unique_ptr<emitter_multimap_type> _cached_emitters;
+        //std::unique_ptr<emitter_multimap_type> _cached_emitters;
 
         void (dispatcher::*info_printer) (basic_module const * m, string_type const & s);
         void (dispatcher::*debug_printer) (basic_module const * m, string_type const & s);
@@ -395,45 +431,37 @@ struct modulus2
 //             _emitters_mapping.reset();
 //         }
 
-        bool register_module_helper (module_name_type && name
-            , module_spec && modspec)
+        bool register_module_helper (module_context && ctx)
         {
-            if (!_cached_emitters) {
-                _cached_emitters.reset(new emitter_multimap_type);
-            }
+            // Cache module emitters
+//             if (!_cached_emitters) {
+//                 _cached_emitters.reset(new emitter_multimap_type);
+//             }
 //
 // //             int nemitters, ndetectors;
-//
-//             if (!modspec.pmodule)
-//                 return false;
-//
-            auto registering_module_ptr = & *modspec.pmodule;
-            auto const & module_name = name.first;
-            //auto const & dep_module_name = name.second;
 
-            auto modspec_it = _module_specs.find(module_name);
+//             auto registering_module_ptr = ctx.module();
+//             auto const & module_name = ctxname.first;
+//             auto const & dep_module_name = name.second;
 
-            if (modspec_it != _module_specs.end()) {
-                log_error(concat(module_name, string_type(": module already registered")));
+            auto ctx_it = _module_specs.find(ctx.name());
+
+            if (ctx_it != _module_specs.end()) {
+                log_error(concat(ctx.name(), string_type(": module already registered")));
                 return false;
             }
 
-            registering_module_ptr->set_dispatcher(this);
-            registering_module_ptr->set_name(module_name);
-
-            api_traits_type api_traits{};
-
-            for (auto & modspec: _module_specs) {
-                auto * module_ptr = & *modspec.second.pmodule;
-
-                for (api_id_type id: api_traits) {
-                    std::cout << "Id: " << id << "\n";
-//                 for (auto & em: *_emitters_mapping) {
-//                     auto id = em.first;
-//                     pmodule->connect_detectors(id, *this);
-//                 }
-                }
-            }
+//             for (auto & modspec: _module_specs) {
+//                 auto * module_ptr = & *modspec.second.pmodule;
+//
+// //                 for (api_id_type id: api_traits) {
+// //                     std::cout << "Id: " << id << "\n";
+// // //                 for (auto & em: *_emitters_mapping) {
+// // //                     auto id = em.first;
+// // //                     pmodule->connect_detectors(id, *this);
+// // //                 }
+// //                 }
+//             }
 
 //             // FIXME
 // //             if (pmodule->use_queued_slots()) {
@@ -475,11 +503,18 @@ struct modulus2
 //             // FIXME
 //             //pmodule->declare_emitters(*this);
 
-            _module_specs.emplace(registering_module_ptr->name(), std::move(modspec));
-            log_debug(concat(registering_module_ptr->name(), string_type(": registered")));
+            {
+                auto result = _module_specs.emplace(ctx.name(), std::move(ctx));
 
-//             // Notify external subscribers
-//             this->module_registered(pmodule->name());
+                // Already-existing element was checked, no reason to return false
+                assert(result.second);
+                auto & ctx = result.first->second;
+
+                log_debug(concat(ctx.name(), string_type(": registered")));
+
+                // Notify external subscribers
+                this->module_registered(ctx.name());
+            }
 
             return true;
         }
@@ -581,23 +616,16 @@ struct modulus2
          * Register in-source defined module
          */
         template <typename ModuleClass, typename ...Args>
-        bool register_module (module_name_type && name, Args &&... args)
+        bool register_module (module_name_type const & name, Args &&... args)
         {
-            module_spec modspec;
-            modspec.pmodule = make_unique<ModuleClass>(std::forward<Args>(args)...);
-            return register_module_helper(
-                  std::forward<module_name_type>(name)
-                , std::move(modspec));
-        }
+            module_context ctx{
+                  *this
+                , name.first
+                , name.second
+                , make_unique<ModuleClass>(std::forward<Args>(args)...)
+            };
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Declare emitters/ Connect detectors
-    ////////////////////////////////////////////////////////////////////////////
-        template <typename ...Args>
-        void declare_emitter (api_id_type id, emitter_type<Args...> & em)
-        {
-            // FIXME
-            //_emitters_mapping->emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
+            return register_module_helper(std::move(ctx));
         }
 
         /**
