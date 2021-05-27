@@ -41,11 +41,13 @@ inline std::string lexical_caster<std::string>::operator () (std::string const &
     return s;
 }
 
-template <typename ApiIdType = int
+template <typename LoggerType
+    , typename ApiIdType = int
     , typename StringType = std::string
 >
 struct modulus2
 {
+    using logger_type = LoggerType;
     using api_id_type = ApiIdType;
     using string_type = StringType;
 
@@ -325,7 +327,7 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
     // dispatcher
     ////////////////////////////////////////////////////////////////////////////
-    class dispatcher
+    class dispatcher final
     {
         friend class basic_module;
         friend class regular_module;
@@ -351,69 +353,26 @@ struct modulus2
     private:
         function_queue_type  _q;
         module_context_container_type _module_specs;
+        logger_type * _logger_ptr{nullptr};
 
         //std::unique_ptr<emitter_multimap_type> _cached_emitters;
 
-        void (dispatcher::*info_printer) (basic_module const * m, string_type const & s);
-        void (dispatcher::*debug_printer) (basic_module const * m, string_type const & s);
-        void (dispatcher::*warn_printer) (basic_module const * m, string_type const & s);
-        void (dispatcher::*error_printer) (basic_module const * m, string_type const & s);
+        void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
+            , basic_module const * m, string_type const & s) = nullptr;
 
     private:
-        void direct_print_info (basic_module const * m, string_type const & s)
+        void direct_print (void (logger_type::*log)(string_type const &)
+            , basic_module const * m
+            , string_type const & s)
         {
-            // FIXME
-            //_plog->info(m != 0 ? m->name() + ": " + s : s);
+            (_logger_ptr->*log)(m ? m->name() + ": " + s : s);
         }
 
-        void direct_print_debug (basic_module const * m, string_type const & s)
+        void queued_print (void (logger_type::*log)(string_type const &)
+            , basic_module const * m
+            , string_type const & s)
         {
-            // FIXME
-            //_plog->debug(m != 0 ? m->name() + ": " + s : s);
-        }
-
-        void direct_print_warn (basic_module const * m, string_type const & s)
-        {
-            // FIXME
-            //_plog->warn(m != 0 ? m->name() + ": " + s : s);
-        }
-
-        void direct_print_error (basic_module const * m, string_type const & s)
-        {
-            // FIXME
-            //_plog->error(m != 0 ? m->name() + ": " + s : s);
-        }
-
-        void queued_print_info (basic_module const * m, string_type const & s)
-        {
-            // FIXME
-            //this->_queue_ptr->push(& logger_type::info
-            //        , _plog
-            //        , (m != 0 ? m->name() + ": " + s : s));
-        }
-
-        void queued_print_debug (basic_module const * m, string_type const & s)
-        {
-            // FIXME
-//             this->_queue_ptr->push(& logger_type::debug
-//                     , _plog
-//                     , (m != 0 ? m->name() + ": " + s : s));
-        }
-
-        void queued_print_warn (basic_module const * m, string_type const & s)
-        {
-            // FIXME
-//             this->_queue_ptr->push(& logger_type::warn
-//                     , _plog
-//                     , (m != 0 ? m->name() + ": " + s : s));
-        }
-
-        void queued_print_error (basic_module const * m, string_type const & s)
-        {
-            // FIXME
-//             this->_queue_ptr->push(& logger_type::error
-//                     , _plog
-//                     , (m != 0 ? m->name() + ": " + s : s));
+            _q.push(log, _logger_ptr, (m != 0 ? m->name() + ": " + s : s));
         }
 
 //         void connect_all ()
@@ -526,14 +485,11 @@ struct modulus2
         dispatcher (dispatcher const &) = delete;
         dispatcher & operator = (dispatcher const &) = delete;
 
-        dispatcher (/*api_item_type * mapper, int n
+        dispatcher (logger_type & logger/*api_item_type * mapper, int n
                 , settings_type & settings
                 , logger_type & logger*/)
-            : //basic_dispatcher()
-              info_printer(& dispatcher::direct_print_info)
-            , debug_printer(& dispatcher::direct_print_debug)
-            , warn_printer(& dispatcher::direct_print_warn)
-            , error_printer(& dispatcher::direct_print_error)
+            : _logger_ptr(& logger)
+            , _log_printer(& dispatcher::direct_print)
 //             , _quit_flag(0)
 //             , _main_module_ptr(nullptr)
 //             , _psettings(& settings)
@@ -560,22 +516,22 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
         void log_info (basic_module const * m, string_type const & s)
         {
-            (this->*info_printer)(m, s);
+            (this->*_log_printer)(& logger_type::info, m, s);
         }
 
         void log_debug (basic_module const * m, string_type const & s)
         {
-            (this->*debug_printer)(m, s);
+            (this->*_log_printer)(& logger_type::debug, m, s);
         }
 
         void log_warn (basic_module const * m, string_type const & s)
         {
-            (this->*warn_printer)(m, s);
+            (this->*_log_printer)(& logger_type::warn, m, s);
         }
 
         void log_error (basic_module const * m, string_type const & s)
         {
-            (this->*error_printer)(m, s);
+            (this->*_log_printer)(& logger_type::error, m, s);
         }
 
         void log_info (string_type const & s)

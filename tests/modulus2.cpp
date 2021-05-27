@@ -9,8 +9,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "pfs/modulus2.hpp"
+#include "pfs/iostream_logger.hpp"
 
-using modulus2 = pfs::modulus2<>;
+using modulus2 = pfs::modulus2<pfs::iostream_logger>;
 
 struct Data
 {
@@ -155,7 +156,8 @@ public:
 
 TEST_CASE("Modulus2 basics") {
 
-    modulus2::dispatcher d;
+    pfs::iostream_logger logger;
+    modulus2::dispatcher d{logger};
 
     //d.register_api(1, std::function<void()>);
 
