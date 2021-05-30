@@ -113,15 +113,19 @@ struct modulus2
 //         {
 //             _dispatcher_ptr->quit();
 //         }
-
-        void log_info (string_type const & s)
+        void log_trace (string_type const & s)
         {
-            _dispatcher_ptr->log_info(this, s);
+            _dispatcher_ptr->log_trace(this, s);
         }
 
         void log_debug (string_type const & s)
         {
             _dispatcher_ptr->log_debug(this, s);
+        }
+
+        void log_info (string_type const & s)
+        {
+            _dispatcher_ptr->log_info(this, s);
         }
 
         void log_warn (string_type const & s)
@@ -180,7 +184,7 @@ struct modulus2
         virtual void declare_emitters (module_context &)
         {}
 
-        virtual void connect_detector (api_id_type, dispatcher &)
+        virtual void connect_detector (api_id_type, module_context &)
         {}
 
         // For regular module must return nullptr.
@@ -285,8 +289,6 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
     class module_context
     {
-        //friend class dispatcher;
-
         using emitter_cache_type = std::map<api_id_type, basic_emitter_type *>;
 
         dispatcher *                  _dispather_ptr {nullptr};
@@ -296,6 +298,9 @@ struct modulus2
 
         // FIXME
 //         std::shared_ptr<dynamic_library> pdl;
+    public:
+        using map_type = std::map<string_type, module_context>;
+
     public:
         module_context (dispatcher & d
                 , string_type const & name
@@ -308,6 +313,9 @@ struct modulus2
             assert(_module_ptr);
             _module_ptr->set_dispatcher(& d);
             _module_ptr->set_name(name);
+
+            _dispather_ptr->log_trace(concat(string_type("Declare emitters for module: ")
+                , this->name()));
             _module_ptr->declare_emitters(*this);
         }
 
@@ -316,13 +324,96 @@ struct modulus2
             return _module_ptr->name();
         }
 
+        basic_module * module ()
+        {
+            return & *_module_ptr;
+        }
+
+        /**
+         * Must be invoked from module's declare_emitters() overloaded method
+         * for declaring specified by @a id module's emitter.
+         */
         template <typename ...Args>
         void declare_emitter (api_id_type id, emitter_type<Args...> & em)
         {
-            std::cout << "-- Caching emitter [" << id << "] for " << _module_ptr->name() << "\n";
+            _dispather_ptr->log_trace(concat(string_type("\tCaching emitter [")
+                , id
+                , string_type("] for ")
+                , this->name()));
             _emitter_cache.emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
         }
+
+        /**
+         * Must be invoked from module's connect_detectors() overloaded method
+         * for connecting specified by @a id module's detector.
+         */
+        template <typename ModuleClass, typename ...Args>
+        void connect_detector (api_id_type id, ModuleClass & m
+            , void (ModuleClass::*f) (Args...))
+        {
+            auto it = _emitter_cache.find(id);
+
+            if (it != _emitter_cache.end()) {
+                auto em = reinterpret_cast<emitter_type<Args...> *>(it->second);
+
+                if (m.queue())
+                    em->connect(*m.queue(), m, f);
+                else
+                    em->connect(m, f);
+            }
+        }
+
+        void connect_emitters (typename map_type::iterator first
+            , typename map_type::iterator last)
+        {
+            _dispather_ptr->log_trace(concat(
+                  string_type("Connecting emitters of module [")
+                , _module_ptr->name()
+                , string_type("] with detectors of registered modules")));
+
+            // Connecting emitters of this module with corresponding detectors
+            // of modules in range [first; last)
+            for (auto & em: _emitter_cache) {
+                auto id = em.first;
+
+                for (typename map_type::iterator it = first; it != last; ++it) {
+                    _dispather_ptr->log_trace(concat(string_type("\tConnecting emitter [")
+                        , id
+                        , string_type("] with corresponding detector of module [")
+                        , it->second.name()
+                        , string_type("]")));
+
+                    it->second._module_ptr->connect_detector(id, *this);
+                }
+            }
+
+            _dispather_ptr->log_trace(concat(
+                  string_type("Connecting emitters of registered modules with detectors of module [")
+                , _module_ptr->name()
+                , string_type("]")));
+
+            // Connecting emitters of modules in range [first; last)
+            // with corresponding detectors of this module
+            for (typename map_type::iterator it = first; it != last; ++it) {
+                _dispather_ptr->log_trace(concat(
+                    string_type("\tConnecting emitters of module [")
+                    , it->second.name()
+                    , string_type("]")));
+
+                for (auto & em: it->second._emitter_cache) {
+                    auto id = em.first;
+                    _dispather_ptr->log_trace(concat(
+                        string_type("\t\tConnecting emitter [")
+                        , id
+                        , string_type("]")));
+
+                    _module_ptr->connect_detector(id, it->second);
+                }
+            }
+        }
     }; // module_context
+
+    using module_context_map_type = std::map<string_type, module_context>;
 
     ////////////////////////////////////////////////////////////////////////////
     // dispatcher
@@ -335,8 +426,7 @@ struct modulus2
         friend class slave_module;
 
         using string_type = modulus2::string_type;
-        using module_context_container_type = std::map<string_type, module_context>;
-        //using emitter_multimap_type = std::multimap<api_id_type, basic_emitter_type *>;
+        using module_context_map_type = typename module_context::map_type;
 
     public:
         enum class exit_status
@@ -352,7 +442,7 @@ struct modulus2
 
     private:
         function_queue_type  _q;
-        module_context_container_type _module_specs;
+        module_context_map_type _module_specs;
         logger_type * _logger_ptr{nullptr};
 
         //std::unique_ptr<emitter_multimap_type> _cached_emitters;
@@ -375,34 +465,8 @@ struct modulus2
             _q.push(log, _logger_ptr, (m != 0 ? m->name() + ": " + s : s));
         }
 
-//         void connect_all ()
-//         {
-//             for (auto & modspec: _module_specs) {
-//                 auto * pmodule = & *modspec.second.pmodule;
-//
-//                 for (auto & em: *_emitters_mapping) {
-//                     auto id = em.first;
-//                     pmodule->connect_detectors(id, *this);
-//                 }
-//             }
-//
-//             // Emitters mapping is no longer needed
-//             _emitters_mapping.reset();
-//         }
-
         bool register_module_helper (module_context && ctx)
         {
-            // Cache module emitters
-//             if (!_cached_emitters) {
-//                 _cached_emitters.reset(new emitter_multimap_type);
-//             }
-//
-// //             int nemitters, ndetectors;
-
-//             auto registering_module_ptr = ctx.module();
-//             auto const & module_name = ctxname.first;
-//             auto const & dep_module_name = name.second;
-
             auto ctx_it = _module_specs.find(ctx.name());
 
             if (ctx_it != _module_specs.end()) {
@@ -410,17 +474,10 @@ struct modulus2
                 return false;
             }
 
-//             for (auto & modspec: _module_specs) {
-//                 auto * module_ptr = & *modspec.second.pmodule;
-//
-// //                 for (api_id_type id: api_traits) {
-// //                     std::cout << "Id: " << id << "\n";
-// // //                 for (auto & em: *_emitters_mapping) {
-// // //                     auto id = em.first;
-// // //                     pmodule->connect_detectors(id, *this);
-// // //                 }
-// //                 }
-//             }
+            // Cross-connecting emitters just resgistering module and already
+            // registered modules
+            if (!_module_specs.empty())
+                ctx.connect_emitters(_module_specs.begin(), _module_specs.end());
 
 //             // FIXME
 // //             if (pmodule->use_queued_slots()) {
@@ -458,16 +515,14 @@ struct modulus2
 //                 log_error(concat(pmodule->name(), string_type(": on_loaded stage failed")));
 //                 return false;
 //             }
-//
-//             // FIXME
-//             //pmodule->declare_emitters(*this);
 
+            // Emplace module into module specs container
             {
-                auto result = _module_specs.emplace(ctx.name(), std::move(ctx));
+                auto emplaced_module = _module_specs.emplace(ctx.name(), std::move(ctx));
 
                 // Already-existing element was checked, no reason to return false
-                assert(result.second);
-                auto & ctx = result.first->second;
+                assert(emplaced_module.second);
+                auto & ctx = emplaced_module.first->second;
 
                 log_debug(concat(ctx.name(), string_type(": registered")));
 
@@ -514,14 +569,19 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
     // Logger specific methods
     ////////////////////////////////////////////////////////////////////////////
-        void log_info (basic_module const * m, string_type const & s)
+        void log_trace (basic_module const * m, string_type const & s)
         {
-            (this->*_log_printer)(& logger_type::info, m, s);
+            (this->*_log_printer)(& logger_type::trace, m, s);
         }
 
         void log_debug (basic_module const * m, string_type const & s)
         {
             (this->*_log_printer)(& logger_type::debug, m, s);
+        }
+
+        void log_info (basic_module const * m, string_type const & s)
+        {
+            (this->*_log_printer)(& logger_type::info, m, s);
         }
 
         void log_warn (basic_module const * m, string_type const & s)
@@ -534,14 +594,19 @@ struct modulus2
             (this->*_log_printer)(& logger_type::error, m, s);
         }
 
-        void log_info (string_type const & s)
+        void log_trace (string_type const & s)
         {
-            log_info(nullptr, s);
+            log_trace(nullptr, s);
         }
 
         void log_debug (string_type const & s)
         {
             log_debug(nullptr, s);
+        }
+
+        void log_info (string_type const & s)
+        {
+            log_info(nullptr, s);
         }
 
         void log_warn (string_type const & s)
@@ -574,7 +639,7 @@ struct modulus2
         template <typename ModuleClass, typename ...Args>
         bool register_module (module_name_type const & name, Args &&... args)
         {
-            module_context ctx{
+            module_context ctx {
                   *this
                 , name.first
                 , name.second
@@ -582,27 +647,6 @@ struct modulus2
             };
 
             return register_module_helper(std::move(ctx));
-        }
-
-        /**
-         * Must be invoked from module's connect_detectors() overloaded method
-         * for connecting specified by @a id module's detector.
-         */
-        template <typename ModuleClass, typename ...Args>
-        void connect_detector (api_id_type id, ModuleClass & m
-            , void (ModuleClass::*f) (Args...))
-        {
-            // FIXME
-//             auto range = _emitters_mapping->equal_range(id);
-//
-//             for (auto it = range.first; it != range.second; ++it) {
-//                 auto em = reinterpret_cast<emitter_type<Args...> *>(it->second);
-//
-//                 if (m.queue())
-//                     em->connect(*m.queue(), m, f);
-//                 else
-//                     em->connect(m, f);
-//             }
         }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -674,6 +718,7 @@ struct modulus2
     class regular_module: public basic_module
     {
         friend class dispatcher;
+        friend class module_context;
 
     protected:
         virtual function_queue_type * queue () override
@@ -688,6 +733,7 @@ struct modulus2
     class runnable_module: public basic_module
     {
         friend class dispatcher;
+        friend class module_context;
 
         function_queue_type _q;
 
@@ -705,6 +751,7 @@ struct modulus2
     class slave_module: public basic_module
     {
         friend class dispatcher;
+        friend class module_context;
 
         // FIXME Must be set while construction according to master (runnable or dispatcher's) queue
         function_queue_type * _pq {nullptr};

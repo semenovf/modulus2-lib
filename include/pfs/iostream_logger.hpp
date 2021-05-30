@@ -14,14 +14,19 @@ namespace pfs {
 class iostream_logger
 {
 public:
-    void info (std::string const & msg)
+    void trace (std::string const & msg)
     {
-        std::cout << msg.c_str() << "\n";
+        std::cout << "~~ " << msg.c_str() << "\n";
     }
 
     void debug (std::string const & msg)
     {
         std::cout << "-- " << msg.c_str() << "\n";
+    }
+
+    void info (std::string const & msg)
+    {
+        std::cout << msg.c_str() << "\n";
     }
 
     void warn (std::string const & msg)

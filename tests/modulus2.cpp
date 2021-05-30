@@ -35,7 +35,6 @@ public:
 
     virtual void declare_emitters (modulus2::module_context & ctx) override
     {
-        std::cout << "Declare emitters for module: " << this->name() << "\n";
         ctx.declare_emitter(0, emitZeroArg);
         ctx.declare_emitter(1, emitOneArg);
         ctx.declare_emitter(2, emitTwoArgs);
@@ -55,34 +54,32 @@ public:
     m2 (int) {}
 
     virtual void connect_detector (modulus2::api_id_type id
-        , modulus2::dispatcher & d) override
+        , modulus2::module_context & ctx) override
     {
-        std::cout << "Connect m2 detector for id: " << id << "\n";
-
         switch (id) {
             case 0:
-                d.connect_detector(id, *this, & m2::onZeroArg);
+                ctx.connect_detector(id, *this, & m2::onZeroArg);
                 break;
             case 1:
-                d.connect_detector(id, *this, & m2::onOneArg);
+                ctx.connect_detector(id, *this, & m2::onOneArg);
                 break;
             case 2:
-                d.connect_detector(id, *this, & m2::onTwoArgs);
+                ctx.connect_detector(id, *this, & m2::onTwoArgs);
                 break;
             case 3:
-                d.connect_detector(id, *this, & m2::onThreeArgs);
+                ctx.connect_detector(id, *this, & m2::onThreeArgs);
                 break;
             case 4:
-                d.connect_detector(id, *this, & m2::onFourArgs);
+                ctx.connect_detector(id, *this, & m2::onFourArgs);
                 break;
             case 5:
-                d.connect_detector(id, *this, & m2::onFiveArgs);
+                ctx.connect_detector(id, *this, & m2::onFiveArgs);
                 break;
             case 6:
-                d.connect_detector(id, *this, & m2::onSixArgs);
+                ctx.connect_detector(id, *this, & m2::onSixArgs);
                 break;
             case 7:
-                d.connect_detector(id, *this, & m2::onData);
+                ctx.connect_detector(id, *this, & m2::onData);
                 break;
         }
     }
@@ -142,16 +139,61 @@ private:
     }
 };
 
-class m3 : public modulus2::regular_module
+class m3 : public modulus2::runnable_module
 {
 public:
     m3 (int, std::string const &) {}
 };
 
-class m4 : public modulus2::regular_module
+class m4 : public modulus2::slave_module
 {
+    modulus2::emitter_type<bool> emitOneArg;
+    modulus2::emitter_type<bool, char> emitTwoArgs;
+
+    int _counter = 0;
 public:
     m4 () {}
+
+    virtual void declare_emitters (modulus2::module_context & ctx) override
+    {
+        ctx.declare_emitter(1, emitOneArg);
+        ctx.declare_emitter(2, emitTwoArgs);
+    }
+
+    virtual void connect_detector (modulus2::api_id_type id
+        , modulus2::module_context & ctx) override
+    {
+        switch (id) {
+            case 1:
+                ctx.connect_detector(id, *this, & m4::onOneArg);
+                break;
+            case 2:
+                ctx.connect_detector(id, *this, & m4::onTwoArgs);
+                break;
+            case 7:
+                ctx.connect_detector(id, *this, & m4::onData);
+                break;
+        }
+    }
+private:
+    void onOneArg (bool ok)
+    {
+        _counter++;
+        CHECK_MESSAGE(ok, "from slave_module: onOneArg(bool)");
+    }
+
+    void onTwoArgs (bool ok, char ch)
+    {
+        CHECK(ok);
+        CHECK_MESSAGE(ch == 'c', "from slave_module: onTwoArgs(true, 'c')");
+    }
+
+    void onData (Data const & d)
+    {
+        _counter++;
+        CHECK_MESSAGE(d.name == "Name", "from slave_module: onData()");
+        CHECK_MESSAGE(d.value == "Value", "from slave_module: onData()");
+    }
 };
 
 TEST_CASE("Modulus2 basics") {
