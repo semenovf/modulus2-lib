@@ -184,8 +184,11 @@ struct modulus2
         virtual void declare_emitters (module_context &)
         {}
 
-        virtual void connect_detector (api_id_type, module_context &)
-        {}
+        virtual bool connect_detector (api_id_type, module_context &)
+        {
+            // There are no detectors associated with API identifier
+            return false;
+        }
 
         // For regular module must return nullptr.
         // For runnable module must return own queue.
@@ -301,6 +304,20 @@ struct modulus2
     public:
         using map_type = std::map<string_type, module_context>;
 
+    private:
+        void trace_emitter_connected (api_id_type id
+            , string_type const & ename  // emitter owner name
+            , string_type const & dname) // detector owner name
+        {
+            _dispather_ptr->log_trace(concat(string_type("\tEmitter [")
+                , id
+                , string_type("] of module [")
+                , ename
+                , string_type("] connected with corresponding detector of module [")
+                , dname
+                , string_type("]")));
+        }
+
     public:
         module_context (dispatcher & d
                 , string_type const & name
@@ -346,9 +363,12 @@ struct modulus2
         /**
          * Must be invoked from module's connect_detectors() overloaded method
          * for connecting specified by @a id module's detector.
+         *
+         * @return @c true if emitter with associated API identifier @a id found
+         *         and connected to detector, @c false if otherwise.
          */
         template <typename ModuleClass, typename ...Args>
-        void connect_detector (api_id_type id, ModuleClass & m
+        bool connect_detector (api_id_type id, ModuleClass & m
             , void (ModuleClass::*f) (Args...))
         {
             auto it = _emitter_cache.find(id);
@@ -360,54 +380,44 @@ struct modulus2
                     em->connect(*m.queue(), m, f);
                 else
                     em->connect(m, f);
+
+                return true;
             }
+
+            return false;
         }
 
         void connect_emitters (typename map_type::iterator first
             , typename map_type::iterator last)
         {
-            _dispather_ptr->log_trace(concat(
-                  string_type("Connecting emitters of module [")
-                , _module_ptr->name()
-                , string_type("] with detectors of registered modules")));
+            _dispather_ptr->log_trace(string_type("Connecting emitters:"));
 
             // Connecting emitters of this module with corresponding detectors
-            // of modules in range [first; last)
+            // of modules in range [first; last) and with own detectors
             for (auto & em: _emitter_cache) {
                 auto id = em.first;
 
-                for (typename map_type::iterator it = first; it != last; ++it) {
-                    _dispather_ptr->log_trace(concat(string_type("\tConnecting emitter [")
-                        , id
-                        , string_type("] with corresponding detector of module [")
-                        , it->second.name()
-                        , string_type("]")));
+                // Connect with own detector
+                if (_module_ptr->connect_detector(id, *this)) {
+                    trace_emitter_connected(id, _module_ptr->name(), _module_ptr->name());
+                }
 
-                    it->second._module_ptr->connect_detector(id, *this);
+                for (typename map_type::iterator it = first; it != last; ++it) {
+                    if (it->second._module_ptr->connect_detector(id, *this)) {
+                        trace_emitter_connected(id, _module_ptr->name(), it->second.name());
+                    }
                 }
             }
-
-            _dispather_ptr->log_trace(concat(
-                  string_type("Connecting emitters of registered modules with detectors of module [")
-                , _module_ptr->name()
-                , string_type("]")));
 
             // Connecting emitters of modules in range [first; last)
             // with corresponding detectors of this module
             for (typename map_type::iterator it = first; it != last; ++it) {
-                _dispather_ptr->log_trace(concat(
-                    string_type("\tConnecting emitters of module [")
-                    , it->second.name()
-                    , string_type("]")));
-
                 for (auto & em: it->second._emitter_cache) {
                     auto id = em.first;
-                    _dispather_ptr->log_trace(concat(
-                        string_type("\t\tConnecting emitter [")
-                        , id
-                        , string_type("]")));
 
-                    _module_ptr->connect_detector(id, it->second);
+                    if (_module_ptr->connect_detector(id, it->second)) {
+                        trace_emitter_connected(id, it->second.name(), _module_ptr->name());
+                    }
                 }
             }
         }
@@ -474,10 +484,11 @@ struct modulus2
                 return false;
             }
 
-            // Cross-connecting emitters just resgistering module and already
-            // registered modules
-            if (!_module_specs.empty())
-                ctx.connect_emitters(_module_specs.begin(), _module_specs.end());
+            // Cross-connecting emitters of just registering module and already
+            // registered modules.
+            // If _module_specs is empty so emitters of just registering module
+            // will be connected with own detectors only.
+            ctx.connect_emitters(_module_specs.begin(), _module_specs.end());
 
 //             // FIXME
 // //             if (pmodule->use_queued_slots()) {

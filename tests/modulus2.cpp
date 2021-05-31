@@ -44,6 +44,24 @@ public:
         ctx.declare_emitter(6, emitSixArgs);
         ctx.declare_emitter(7, emitData);
     }
+
+    virtual bool connect_detector (modulus2::api_id_type id
+        , modulus2::module_context & ctx) override
+    {
+        switch (id) {
+            case 4:
+                return ctx.connect_detector(id, *this, & m1::onFourArgs);
+        }
+
+        return false;
+    }
+
+private:
+    void onFourArgs (bool ok, char, short, int i)
+    {
+        CHECK(ok);
+        CHECK(i == std::numeric_limits<int>::max());
+    }
 };
 
 class m2 : public modulus2::regular_module
@@ -53,35 +71,29 @@ class m2 : public modulus2::regular_module
 public:
     m2 (int) {}
 
-    virtual void connect_detector (modulus2::api_id_type id
+    virtual bool connect_detector (modulus2::api_id_type id
         , modulus2::module_context & ctx) override
     {
         switch (id) {
             case 0:
-                ctx.connect_detector(id, *this, & m2::onZeroArg);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onZeroArg);
             case 1:
-                ctx.connect_detector(id, *this, & m2::onOneArg);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onOneArg);
             case 2:
-                ctx.connect_detector(id, *this, & m2::onTwoArgs);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onTwoArgs);
             case 3:
-                ctx.connect_detector(id, *this, & m2::onThreeArgs);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onThreeArgs);
             case 4:
-                ctx.connect_detector(id, *this, & m2::onFourArgs);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onFourArgs);
             case 5:
-                ctx.connect_detector(id, *this, & m2::onFiveArgs);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onFiveArgs);
             case 6:
-                ctx.connect_detector(id, *this, & m2::onSixArgs);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onSixArgs);
             case 7:
-                ctx.connect_detector(id, *this, & m2::onData);
-                break;
+                return ctx.connect_detector(id, *this, & m2::onData);
         }
+
+        return false;
     }
 
 private:
@@ -160,21 +172,21 @@ public:
         ctx.declare_emitter(2, emitTwoArgs);
     }
 
-    virtual void connect_detector (modulus2::api_id_type id
+    virtual bool connect_detector (modulus2::api_id_type id
         , modulus2::module_context & ctx) override
     {
         switch (id) {
             case 1:
-                ctx.connect_detector(id, *this, & m4::onOneArg);
-                break;
+                return ctx.connect_detector(id, *this, & m4::onOneArg);
             case 2:
-                ctx.connect_detector(id, *this, & m4::onTwoArgs);
-                break;
+                return ctx.connect_detector(id, *this, & m4::onTwoArgs);
             case 7:
-                ctx.connect_detector(id, *this, & m4::onData);
-                break;
+                return ctx.connect_detector(id, *this, & m4::onData);
         }
+
+        return false;
     }
+
 private:
     void onOneArg (bool ok)
     {
