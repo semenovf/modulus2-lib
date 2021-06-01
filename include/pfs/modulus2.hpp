@@ -12,6 +12,7 @@
 #include "pfs/memory.hpp"
 #include <map>
 #include <string>
+#include <thread>
 #include <utility>
 #include <cassert>
 
@@ -81,7 +82,19 @@ struct modulus2
     class basic_module;
     class regular_module;
     class runnable_module;
-    class slave_module;
+    class guest_module;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Runnable interface
+    ////////////////////////////////////////////////////////////////////////////
+    class runnable_interface
+    {
+    protected:
+        runnable_interface * self () { return this; }
+
+    public:
+        virtual int run () = 0;
+    };
 
 ////////////////////////////////////////////////////////////////////////////////
 // basic_module
@@ -202,6 +215,8 @@ struct modulus2
         {
             return _name;
         }
+
+        virtual runnable_interface * runnable () { return nullptr; }
 
 //         bool is_registered () const noexcept
 //         {
@@ -374,6 +389,9 @@ struct modulus2
             return false;
         }
 
+    private:
+        friend class dispatcher;
+
         void connect_emitters (typename map_type::iterator first
             , typename map_type::iterator last)
         {
@@ -420,10 +438,11 @@ struct modulus2
         friend class basic_module;
         friend class regular_module;
         friend class runnable_module;
-        friend class slave_module;
+        friend class guest_module;
 
         using string_type = modulus2::string_type;
         using module_context_map_type = typename module_context::map_type;
+        using thread_pool_type = std::list<std::thread>;
 
     public:
         enum class exit_status
@@ -441,8 +460,6 @@ struct modulus2
         function_queue_type  _q;
         module_context_map_type _module_specs;
         logger_type * _logger_ptr{nullptr};
-
-        //std::unique_ptr<emitter_multimap_type> _cached_emitters;
 
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
@@ -617,9 +634,6 @@ struct modulus2
             log_error(nullptr, s);
         }
 
-    ////////////////////////////////////////////////////////////////////////////
-    //
-    ////////////////////////////////////////////////////////////////////////////
         /**
          * Number of registered modules
          */
@@ -650,63 +664,122 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
     // Start
     ////////////////////////////////////////////////////////////////////////////
-        bool start ()
-        {
-            // FIXME
-//             assert(_psettings);
+//         bool start ()
+//         {
+//             // FIXME
+// //             assert(_psettings);
+// //
+//             bool ok = true;
 //
-            bool ok = true;
 //
-//             auto first = _module_spec_map.begin();
-//             auto last  = _module_spec_map.end();
+// //             auto first = _module_spec_map.begin();
+// //             auto last  = _module_spec_map.end();
+// //
+// //             // Launch on_start() method for regular modules
+// //             for (; first != last; ++first) {
+// //                 module_spec modspec = first->second;
+// //                 std::shared_ptr<basic_module> pmodule = modspec.pmodule;
+// //
+// //                 bool is_regular_module = !pmodule->is_slave()
+// //                     && !pmodule->use_queued_slots();
+// //
+// //                 if (is_regular_module) {
+// //                     if (! pmodule->on_start_wrapper(*_psettings))
+// //                        ok = false;
+// //                     else
+// //                         this->module_started(pmodule->name());
+// //                 }
+// //             }
+// //
+// //             // Redirect log ouput.
+// //             if (ok) {
+// //                 info_printer  = & dispatcher::async_print_info;
+// //                 debug_printer = & dispatcher::async_print_debug;
+// //                 warn_printer  = & dispatcher::async_print_warn;
+// //                 error_printer = & dispatcher::async_print_error;
+// //             }
 //
-//             // Launch on_start() method for regular modules
-//             for (; first != last; ++first) {
-//                 module_spec modspec = first->second;
-//                 std::shared_ptr<basic_module> pmodule = modspec.pmodule;
-//
-//                 bool is_regular_module = !pmodule->is_slave()
-//                     && !pmodule->use_queued_slots();
-//
-//                 if (is_regular_module) {
-//                     if (! pmodule->on_start_wrapper(*_psettings))
-//                        ok = false;
-//                     else
-//                         this->module_started(pmodule->name());
-//                 }
-//             }
-//
-//             // Redirect log ouput.
-//             if (ok) {
-//                 info_printer  = & dispatcher::async_print_info;
-//                 debug_printer = & dispatcher::async_print_debug;
-//                 warn_printer  = & dispatcher::async_print_warn;
-//                 error_printer = & dispatcher::async_print_error;
-//             }
-
-            return ok;
-        }
+//             return ok;
+//         }
 
     ////////////////////////////////////////////////////////////////////////////
     // Main execution loop
     ////////////////////////////////////////////////////////////////////////////
         int exec ()
         {
-            auto r = exit_status::failure;
+            auto r = exit_status::success;
 
-            // Connect detectors to declared emitters
-            // connect_all();
+            for (auto & ctx: _module_specs) {
+                auto module_ptr = ctx.second.module();
 
-            // FIXME
-            auto success_start = start();
+                if (module_ptr->runnable()) {
+                    log_trace(concat(string_type("Module [")
+                        , module_ptr->name()
+                        , string_type("] is runnable")));
+                } else if (module_ptr->queue() == nullptr) {
+                    log_trace(concat(string_type("Module [")
+                        , module_ptr->name()
+                        , string_type("] is regular")));
+                } else {
+                    log_trace(concat(string_type("Module [")
+                        , module_ptr->name()
+                        , string_type("] is guest")));
+                }
+            }
 
-//             if (success_start)
-//                 r = exec_main();
+//             thread_sequence_type thread_pool;
 //
-//             finalize(success_start);
+//             auto runnable_it   = _runnable_modules.begin();
+//             auto runnable_last = _runnable_modules.end();
+//
+//             thread_function master_thread_function = 0;
+//
+//             for (; runnable_it != runnable_last; ++runnable_it) {
+//                 basic_module * m = runnable_it->first;
+//                 thread_function tfunc = runnable_it->second;
+//
+//                 // Run module if it is not a master
+//                 if (m != _main_module_ptr)
+//                     thread_pool.emplace_back(new std::thread(tfunc, m, *_psettings));
+//                 else
+//                     master_thread_function = tfunc;
+//             }
+//
+//             // Run module if it is a master
+//             if (master_thread_function) {
+//                 // Run dispatcher loop in separate thread
+//                 std::thread dthread(& dispatcher::run, this);
+//
+//                 // And call master function
+//                 r = (_main_module_ptr->*master_thread_function)(*_psettings);
+//
+//                 dthread.join();
+//             } else {
+//                 this->run();
+//             }
+//
+//             for (auto & pth: thread_pool) {
+//                 if (pth->joinable())
+//                     pth->join();
+//             }
 
             return static_cast<int>(r);
         }
+
+//         int exec ()
+//         {
+// //             auto r = exit_status::failure;
+//
+//             // FIXME
+// //             auto success_start = start();
+//
+// //             if (success_start)
+// //                 r = exec_main();
+// //
+// //             finalize(success_start);
+//
+//             return static_cast<int>(r);
+//         }
 
     }; // dispatcher
 
@@ -729,6 +802,7 @@ struct modulus2
 // Runnable module
 ////////////////////////////////////////////////////////////////////////////////
     class runnable_module: public basic_module
+        , public runnable_interface
     {
         friend class dispatcher;
         friend class module_context;
@@ -740,24 +814,39 @@ struct modulus2
         {
             return & _q;
         }
+
+    public:
+        runnable_interface * runnable () override
+        {
+            return runnable_interface::self();
+        }
+
+        int run () override
+        {
+            return 0;
+        }
     };
 
-
 ////////////////////////////////////////////////////////////////////////////////
-// Slave module
+// Adjective module
 ////////////////////////////////////////////////////////////////////////////////
-    class slave_module: public basic_module
+    class guest_module: public basic_module
     {
         friend class dispatcher;
         friend class module_context;
 
         // FIXME Must be set while construction according to master (runnable or dispatcher's) queue
-        function_queue_type * _pq {nullptr};
+        function_queue_type * _parent_queue {nullptr};
 
     protected:
         virtual function_queue_type * queue () override
         {
-            return _pq;
+            return _parent_queue;
+        }
+
+        void set_parent_queue (function_queue_type * q)
+        {
+            _parent_queue = q;
         }
     };
 };

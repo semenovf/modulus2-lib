@@ -157,12 +157,13 @@ public:
     m3 (int, std::string const &) {}
 };
 
-class m4 : public modulus2::slave_module
+class m4 : public modulus2::guest_module
 {
     modulus2::emitter_type<bool> emitOneArg;
     modulus2::emitter_type<bool, char> emitTwoArgs;
 
     int _counter = 0;
+
 public:
     m4 () {}
 
@@ -220,6 +221,6 @@ TEST_CASE("Modulus2 basics") {
     CHECK(d.register_module<m3>(std::make_pair("m3", ""), 43, "hello"));
     CHECK(d.register_module<m4>(std::make_pair("m4", "m3")));
 
-//     CHECK(d.count() == 4);
-//     CHECK(d.exec() == 0);
+    CHECK(d.count() == 4);
+    CHECK(d.exec() == 0);
 }
