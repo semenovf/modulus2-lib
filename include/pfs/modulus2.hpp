@@ -223,19 +223,6 @@ struct modulus2
 //             return _dispatcher_ptr;
 //         }
 //
-            // DEPRECATED
-//         virtual emitter_mapper_pair const * get_emitters (int & count)
-//         {
-//             count = 0;
-//             return nullptr;
-//         }
-            // DEPRECATED
-//         virtual detector_mapper_pair const * get_detectors (int & count)
-//         {
-//             count = 0;
-//             return nullptr;
-//         }
-//
 //         bool is_quit () const
 //         {
 //             return _dispatcher_ptr->is_quit();
