@@ -21,6 +21,8 @@ struct Data
 
 class m1 : public modulus2::regular_module
 {
+    int _counter = 0;
+
     modulus2::emitter_type<> emitZeroArg;
     modulus2::emitter_type<bool> emitOneArg;
     modulus2::emitter_type<bool, char> emitTwoArgs;
@@ -34,6 +36,37 @@ private:
     bool on_start (modulus2::properties_type const &) override
     {
         log_debug("on_start()");
+
+        emitZeroArg();
+
+        emitOneArg(true);
+
+        emitTwoArgs(true, 'c');
+
+        emitThreeArgs(true, 'c'
+                , std::numeric_limits<short>::max());
+
+        emitFourArgs(true, 'c'
+                , std::numeric_limits<short>::max()
+                , std::numeric_limits<int>::max());
+
+        emitFiveArgs(true, 'c'
+                , std::numeric_limits<short>::max()
+                , std::numeric_limits<int>::max()
+                , std::numeric_limits<int>::max());
+
+        emitSixArgs(true, 'c'
+                , std::numeric_limits<short>::max()
+                , std::numeric_limits<int>::max()
+                , std::numeric_limits<int>::max()
+                , "Hello, World!");
+
+        Data d;
+        d.name = std::string{"Name"};
+        d.value = std::string{"Value"};
+
+        emitData(std::move(d));
+
         return true;
     }
 
@@ -45,6 +78,11 @@ private:
 
 public:
     m1 () {}
+
+    ~m1 ()
+    {
+        CHECK(_counter == 1);
+    }
 
     virtual void declare_emitters (modulus2::module_context & ctx) override
     {
@@ -72,6 +110,7 @@ public:
 private:
     void onFourArgs (bool ok, char, short, int i)
     {
+        _counter++;
         CHECK(ok);
         CHECK(i == std::numeric_limits<int>::max());
     }
@@ -99,7 +138,7 @@ public:
 
     ~m2 ()
     {
-        CHECK(_counter == 3);
+        CHECK(_counter == 8);
     }
 
     virtual bool connect_detector (modulus2::api_id_type id
@@ -238,6 +277,11 @@ private:
 public:
     m4 () {}
 
+    ~m4 ()
+    {
+        CHECK(_counter == 3);
+    }
+
     virtual void declare_emitters (modulus2::module_context & ctx) override
     {
         ctx.declare_emitter(1, emitOneArg);
@@ -268,6 +312,7 @@ private:
 
     void onTwoArgs (bool ok, char ch)
     {
+        _counter++;
         CHECK(ok);
         CHECK_MESSAGE(ch == 'c', "from guest_module: onTwoArgs(true, 'c')");
     }
@@ -302,6 +347,11 @@ private:
 
 public:
     m5 () {}
+
+    ~m5 ()
+    {
+        CHECK(_counter == 2);
+    }
 
     virtual void declare_emitters (modulus2::module_context & ctx) override
     {
