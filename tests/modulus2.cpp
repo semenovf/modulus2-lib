@@ -30,6 +30,19 @@ class m1 : public modulus2::regular_module
     modulus2::emitter_type<bool, char, short, int, long, std::string> emitSixArgs;
     modulus2::emitter_type<Data> emitData;
 
+private:
+    bool on_start (modulus2::properties_type const &) override
+    {
+        log_debug("on_start()");
+        return true;
+    }
+
+    bool on_finish () override
+    {
+        log_debug("on_finish()");
+        return true;
+    }
+
 public:
     m1 () {}
 
@@ -68,8 +81,26 @@ class m2 : public modulus2::regular_module
 {
     int _counter = 0;
 
+private:
+    bool on_start (modulus2::properties_type const &) override
+    {
+        log_debug("on_start()");
+        return true;
+    }
+
+    bool on_finish () override
+    {
+        log_debug("on_finish()");
+        return true;
+    }
+
 public:
     m2 (int) {}
+
+    ~m2 ()
+    {
+        CHECK(_counter == 3);
+    }
 
     virtual bool connect_detector (modulus2::api_id_type id
         , modulus2::module_context & ctx) override
@@ -153,8 +184,35 @@ private:
 
 class m3 : public modulus2::runnable_module
 {
+private:
+    bool on_start (modulus2::properties_type const &) override
+    {
+        log_debug("on_start()");
+        return true;
+    }
+
+    bool on_finish () override
+    {
+        log_debug("on_finish()");
+        return true;
+    }
+
 public:
     m3 (int, std::string const &) {}
+
+    modulus2::exit_status run () override
+    {
+        int i = 3;
+
+        while (! is_quit() && i--) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            call_all();
+        }
+
+        quit();
+
+        return modulus2::exit_status::success;
+    }
 };
 
 class m4 : public modulus2::guest_module
@@ -163,6 +221,19 @@ class m4 : public modulus2::guest_module
     modulus2::emitter_type<bool, char> emitTwoArgs;
 
     int _counter = 0;
+
+private:
+    bool on_start (modulus2::properties_type const &) override
+    {
+        log_debug("on_start()");
+        return true;
+    }
+
+    bool on_finish () override
+    {
+        log_debug("on_finish()");
+        return true;
+    }
 
 public:
     m4 () {}
@@ -192,35 +263,90 @@ private:
     void onOneArg (bool ok)
     {
         _counter++;
-        CHECK_MESSAGE(ok, "from slave_module: onOneArg(bool)");
+        CHECK_MESSAGE(ok, "from guest_module: onOneArg(bool)");
     }
 
     void onTwoArgs (bool ok, char ch)
     {
         CHECK(ok);
-        CHECK_MESSAGE(ch == 'c', "from slave_module: onTwoArgs(true, 'c')");
+        CHECK_MESSAGE(ch == 'c', "from guest_module: onTwoArgs(true, 'c')");
     }
 
     void onData (Data const & d)
     {
         _counter++;
-        CHECK_MESSAGE(d.name == "Name", "from slave_module: onData()");
-        CHECK_MESSAGE(d.value == "Value", "from slave_module: onData()");
+        CHECK_MESSAGE(d.name == "Name", "from guest_module: onData()");
+        CHECK_MESSAGE(d.value == "Value", "from guest_module: onData()");
+    }
+};
+
+class m5 : public modulus2::guest_module
+{
+    modulus2::emitter_type<> emitZeroArg;
+    modulus2::emitter_type<bool> emitOneArg;
+
+    int _counter = 0;
+
+private:
+    bool on_start (modulus2::properties_type const &) override
+    {
+        log_debug("on_start()");
+        return true;
+    }
+
+    bool on_finish () override
+    {
+        log_debug("on_finish()");
+        return true;
+    }
+
+public:
+    m5 () {}
+
+    virtual void declare_emitters (modulus2::module_context & ctx) override
+    {
+        ctx.declare_emitter(0, emitZeroArg);
+        ctx.declare_emitter(1, emitOneArg);
+    }
+
+    virtual bool connect_detector (modulus2::api_id_type id
+        , modulus2::module_context & ctx) override
+    {
+        switch (id) {
+            case 0:
+                return ctx.connect_detector(id, *this, & m5::onZeroArg);
+            case 1:
+                return ctx.connect_detector(id, *this, & m5::onOneArg);
+        }
+
+        return false;
+    }
+
+private:
+    void onZeroArg ()
+    {
+        _counter++;
+    }
+
+    void onOneArg (bool ok)
+    {
+        _counter++;
+        CHECK_MESSAGE(ok, "from guest_module: onOneArg(bool)");
     }
 };
 
 TEST_CASE("Modulus2 basics") {
 
+    using exit_status = modulus2::exit_status;
     pfs::iostream_logger logger;
     modulus2::dispatcher d{logger};
-
-    //d.register_api(1, std::function<void()>);
 
     CHECK(d.register_module<m1>(std::make_pair("m1", "")));
     CHECK(d.register_module<m2>(std::make_pair("m2", ""), 42));
     CHECK(d.register_module<m3>(std::make_pair("m3", ""), 43, "hello"));
     CHECK(d.register_module<m4>(std::make_pair("m4", "m3")));
+    CHECK(d.register_module<m5>(std::make_pair("m5", "")));
 
-    CHECK(d.count() == 4);
-    CHECK(d.exec() == 0);
+    CHECK(d.count() == 5);
+    CHECK(d.exec() == exit_status::success);
 }
