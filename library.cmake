@@ -7,7 +7,7 @@
 #      2021.05.20 Initial version
 ################################################################################
 cmake_minimum_required (VERSION 3.5)
-project(pfs-modulus2 CXX C)
+project(modulus2-lib CXX C)
 
 find_package(Threads REQUIRED)
 

@@ -1,12 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2019-2021 Vladislav Trifochkin
 //
-// This file is part of [pfs-common](https://github.com/semenovf/pfs-common) library.
+// This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
 //
 // Changelog:
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "pfs/modulus2/quit_plugin.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/memory.hpp"
@@ -705,6 +706,11 @@ struct modulus2
         bool is_quit () const
         {
             return (_quit_flag.load() != 0);
+        }
+
+        void attach_plugin (quit_plugin & plugin)
+        {
+            plugin.quit.connect(*this, & dispatcher::quit);
         }
 
     ////////////////////////////////////////////////////////////////////////////

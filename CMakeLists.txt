@@ -5,9 +5,10 @@
 #
 # Changelog:
 #      2021.05.20 Initial version
+#      2021.06.18 Added 'demo' subdirectory
 ################################################################################
 cmake_minimum_required (VERSION 3.5)
-project(pfs-modulus2-ALL CXX C)
+project(modulus2-lib-ALL CXX C)
 
 option(BUILD_STRICT "Build with strict policies: C++ standard required, C++ extension is OFF etc" ON)
 option(BUILD_TESTS "Build tests" OFF)
@@ -31,4 +32,5 @@ if (BUILD_TESTS)
 endif()
 
 if (BUILD_DEMO)
+    add_subdirectory(demo)
 endif()

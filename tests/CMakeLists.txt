@@ -3,7 +3,7 @@
 #
 # This file is part of [pfs-common](https://github.com/semenovf/pfs-common) library.
 ################################################################################
-project(pfs-modulus2-TESTS CXX C)
+project(modulus2-lib-TESTS CXX C)
 
 if (ENABLE_COVERAGE)
     message(STATUS "Coverage feature enabled")
