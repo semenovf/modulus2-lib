@@ -13,6 +13,22 @@
 
 using modulus2 = pfs::modulus2<pfs::iostream_logger>;
 
+class custom_module_lifetime_plugin: public pfs::module_lifetime_plugin<std::string>
+{
+    std::string _prefix {"++ Lifetime plugin: "};
+
+protected:
+    void on_module_registered (std::string const & name) override
+    {
+        std::cout << _prefix << "module registered: " << name << std::endl;
+    }
+
+    void on_module_unregistered (std::string const & name) override
+    {
+        std::cout << _prefix << "module unregistered: " << name << std::endl;
+    }
+};
+
 struct Data
 {
     std::string name {"a"};
@@ -390,6 +406,9 @@ TEST_CASE("Modulus2 basics") {
     using exit_status = modulus2::exit_status;
     pfs::iostream_logger logger;
     modulus2::dispatcher d{logger};
+
+    custom_module_lifetime_plugin lifetime_plugin;
+    d.attach_plugin(lifetime_plugin);
 
     CHECK(d.register_module<m1>(std::make_pair("m1", "")));
     CHECK(d.register_module<m2>(std::make_pair("m2", ""), 42));

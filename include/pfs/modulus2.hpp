@@ -7,6 +7,7 @@
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "pfs/modulus2/module_lifetime_plugin.hpp"
 #include "pfs/modulus2/quit_plugin.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/function_queue.hpp"
@@ -441,7 +442,7 @@ struct modulus2
         using thread_pool_type = std::list<std::thread>;
 
     public:
-        // External interfaces for modulus2
+        // Module's lifetime specific signals
         emitter_type<string_type const &> module_registered;
         emitter_type<string_type const &> module_unregistered;
         emitter_type<string_type const &> module_started;
@@ -563,6 +564,7 @@ struct modulus2
             auto result = _module_specs.erase(pos);
 
             log_debug(concat(name, string_type(": unregistered")));
+            this->module_unregistered(name);
 
             // Unregister (recursively) children if have
             if (is_runnable) {
@@ -713,6 +715,14 @@ struct modulus2
             plugin.quit.connect(*this, & dispatcher::quit);
         }
 
+        void attach_plugin (module_lifetime_plugin<string_type> & plugin)
+        {
+            using plugin_type = module_lifetime_plugin<string_type>;
+
+            module_registered.connect(plugin, & plugin_type::module_registered);
+            module_unregistered.connect(plugin, & plugin_type::module_unregistered);
+        }
+
     ////////////////////////////////////////////////////////////////////////////
     // Logger specific methods
     ////////////////////////////////////////////////////////////////////////////
@@ -819,6 +829,7 @@ struct modulus2
                 ctx.second.disconnect_emitters();
                 log_debug(concat(ctx.second.module()->name()
                     , string_type(": unregistered")));
+                this->module_unregistered(ctx.second.module()->name());
             }
 
             _module_specs.clear();
@@ -909,22 +920,6 @@ struct modulus2
 
             return r;
         }
-
-//         int exec ()
-//         {
-// //             auto r = exit_status::failure;
-//
-//             // FIXME
-// //             auto success_start = start();
-//
-// //             if (success_start)
-// //                 r = exec_main();
-// //
-// //             finalize(success_start);
-//
-//             return static_cast<int>(r);
-//         }
-
     }; // dispatcher
 
 ////////////////////////////////////////////////////////////////////////////////

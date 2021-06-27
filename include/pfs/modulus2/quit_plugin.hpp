@@ -18,6 +18,14 @@ public:
 
 public:
     emitter_type quit;
+
+    quit_plugin () = default;
+    ~quit_plugin () = default;
+
+    quit_plugin (quit_plugin const &) = delete;
+    quit_plugin & operator = (quit_plugin const &) = delete;
+    quit_plugin (quit_plugin &&) = delete;
+    quit_plugin & operator = (quit_plugin &&) = delete;
 };
 
 } // namespace
