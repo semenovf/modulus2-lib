@@ -12,6 +12,7 @@
 #include "pfs/emitter.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/memory.hpp"
+#include "pfs/timer_pool.hpp"
 #include <map>
 #include <string>
 #include <thread>
@@ -106,6 +107,9 @@ struct modulus2
 
     public:
         virtual exit_status run () = 0;
+
+        // Called by dispatcher after run() execution and before on_finish()
+        virtual void flush () = 0;
     };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -448,8 +452,9 @@ struct modulus2
         emitter_type<string_type const &> module_started;
 
     private:
-        function_queue_type  _q;
-        module_context_map_type _module_specs;
+        function_queue_type         _q;
+        std::unique_ptr<timer_pool> _timer_pool_ptr;
+        module_context_map_type     _module_specs;
         intmax_t _wait_period {10000}; // wait period in microseconds
                                        // (default is 10 milliseconds)
 
@@ -628,8 +633,8 @@ struct modulus2
 
             // Run
             if (r == exit_status::success) {
+                // Dispatcher
                 if (name.empty()) {
-
                     // Redirect log ouput to queued printer
                     _log_printer = & dispatcher::queued_print;
 
@@ -637,6 +642,13 @@ struct modulus2
                         _q.wait_for(_wait_period);
                         _q.call_all();
                     }
+
+                    // Clear timers and destroy timer pool
+                    _timer_pool_ptr->destroy_all();
+                    _timer_pool_ptr.reset();
+
+                    // Force call of pending callbacks
+                    _q.call_all();
 
                     // Redirect log ouput to direct printer
                     _log_printer = & dispatcher::direct_print;
@@ -649,6 +661,9 @@ struct modulus2
                     assert(module_ptr->runnable());
 
                     r = module_ptr->runnable()->run();
+
+                    // Force call of pending callbacks
+                    module_ptr->runnable()->flush();
                 }
             }
 
@@ -695,10 +710,7 @@ struct modulus2
         }
 
         virtual ~dispatcher ()
-        {
-            //FIXME
-            //finalize(false);
-        }
+        {}
 
         void quit ()
         {
@@ -840,6 +852,9 @@ struct modulus2
 ////////////////////////////////////////////////////////////////////////////////
         exit_status exec (properties_type const & props = properties_type{})
         {
+            // Initialize timer pool
+            _timer_pool_ptr.reset(new timer_pool);
+
             auto r = exit_status::success;
             thread_pool_type thread_pool;
 
@@ -963,6 +978,11 @@ struct modulus2
         runnable_interface * runnable () override
         {
             return runnable_interface::self();
+        }
+
+        void flush () override
+        {
+            _q.call_all();
         }
     };
 
