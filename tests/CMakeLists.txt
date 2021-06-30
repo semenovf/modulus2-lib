@@ -17,6 +17,7 @@ endif()
 
 set(TEST_NAMES
     modulus2
+    mangling
 )
 
 foreach (name ${TEST_NAMES})
