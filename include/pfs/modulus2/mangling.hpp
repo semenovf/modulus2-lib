@@ -6,10 +6,12 @@
 // This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
 //
 // Changelog:
-//      2021.06.30 Initial version
+//      2021.06.30 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "pfs/split.hpp"
 #include <string>
+#include <vector>
 
 namespace pfs {
 
@@ -19,63 +21,68 @@ inline std::string ref_prefix () { return std::string{"R"}; }
 inline std::string constptr_prefix () { return std::string{"CP"}; }
 inline std::string constref_prefix () { return std::string{"CR"}; }
 
+inline std::string::value_type unregistered_type_char () noexcept
+{
+    return '?';
+}
+
 template <typename T>
-struct mangling
+struct mangler
 {
     std::string operator () () const noexcept
     {
-        return std::string{"?"};
+        return std::string(1, unregistered_type_char());
     }
 };
 
 template <typename T>
-struct mangling<T const>
+struct mangler<T const>
 {
     std::string operator () () const noexcept
     {
-        return const_prefix() + mangling<T>{}();
+        return const_prefix() + mangler<T>{}();
     }
 };
 
 template <typename T>
-struct mangling<T *>
+struct mangler<T *>
 {
     std::string operator () () const noexcept
     {
-        return ptr_prefix() + mangling<T>{}();
+        return ptr_prefix() + mangler<T>{}();
     }
 };
 
 template <typename T>
-struct mangling<T const *>
+struct mangler<T const *>
 {
     std::string operator () () const noexcept
     {
-        return constptr_prefix() + mangling<T>{}();
+        return constptr_prefix() + mangler<T>{}();
     }
 };
 
 template <typename T>
-struct mangling<T &>
+struct mangler<T &>
 {
     std::string operator () () const noexcept
     {
-        return ref_prefix() + mangling<T>{}() ;
+        return ref_prefix() + mangler<T>{}() ;
     }
 };
 
 template <typename T>
-struct mangling<T const &>
+struct mangler<T const &>
 {
     std::string operator () () const noexcept
     {
-        return constref_prefix() + mangling<T>{}() ;
+        return constref_prefix() + mangler<T>{}() ;
     }
 };
 
 #define __PFS_MANGLING_PRIMITIVE_TYPES(t,c)        \
     template <>                                    \
-    struct mangling<t>                             \
+    struct mangler<t>                             \
     {                                              \
         std::string operator () () const noexcept  \
         {                                          \
@@ -97,20 +104,20 @@ __PFS_MANGLING_PRIMITIVE_TYPES(long long         , 'x')
 __PFS_MANGLING_PRIMITIVE_TYPES(unsigned long long, 'y')
 
 template <typename ...Ts>
-struct sequence_mangling;
+struct signature_mangler;
 
 template <typename T, typename ...Ts>
-struct sequence_mangling<T, Ts...>
+struct signature_mangler<T, Ts...>
 {
     std::string operator () () const noexcept
     {
-        auto tail = sequence_mangling<Ts...>{}();
-        return mangling<T>{}() + (tail.empty() ? "" : ";") + tail;
+        auto tail = signature_mangler<Ts...>{}();
+        return mangler<T>{}() + (tail.empty() ? "" : ";") + tail;
     }
 };
 
 template <>
-struct sequence_mangling<>
+struct signature_mangler<>
 {
     std::string operator () () const noexcept
     {
@@ -121,7 +128,68 @@ struct sequence_mangling<>
 template <typename ...Ts>
 inline std::string mangle ()
 {
-    return sequence_mangling<Ts...>{}();
+    return signature_mangler<Ts...>{}();
+}
+
+enum class result_of_matching
+{
+      equal = 0
+    , different_amount    // different amount of encoded types (critical)
+    , incompatible_types  // incompatible types in same positions (critical)
+    , fuzzy_equality      // if basic types are unregistered (warning)
+};
+
+inline result_of_matching match_mangled_signatures (
+      std::string const & s1
+    , std::string const & s2)
+{
+    using string_type = std::string;
+    using vector_type = std::vector<string_type>;
+
+    vector_type v1;
+    vector_type v2;
+    string_type separator{";"};
+
+    split(std::back_inserter(v1)
+        , s1.begin(), s1.end()
+        , separator.begin(), separator.end()
+        , pfs::keep_empty::yes);
+
+    split(std::back_inserter(v2)
+        , s2.begin(), s2.end()
+        , separator.begin(), separator.end()
+        , pfs::keep_empty::yes);
+
+    if (v1.size() != v2.size())
+        return result_of_matching::different_amount;
+
+    result_of_matching result = result_of_matching::equal;
+
+    for (vector_type::size_type i = 0, icount = v1.size()
+            ; i < icount && result == result_of_matching::equal
+            ; i++) {
+
+        if (v1[i].size() != v2[i].size())
+            return result_of_matching::incompatible_types;
+
+        if (v1[i].empty())
+            continue;
+
+        auto basic_type1 = v1[i].back();
+        auto basic_type2 = v2[i].back();
+
+        if (basic_type1 == basic_type2 && basic_type1 == unregistered_type_char())
+            result = result_of_matching::fuzzy_equality;
+
+        for (string_type::size_type j = 0, jcount = v1[i].size(); j < jcount; j++) {
+            if (v1[i][j] != v2[i][j]) {
+                result = result_of_matching::incompatible_types;
+                break;
+            }
+        }
+    }
+
+    return result;
 }
 
 } // namespace pfs
