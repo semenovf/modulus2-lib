@@ -15,7 +15,7 @@
 
 using modulus2 = pfs::modulus2<pfs::iostream_logger>;
 
-class custom_module_lifetime_plugin: public pfs::module_lifetime_plugin<std::string>
+class custom_module_lifetime_plugin: public pfs::module_lifetime_plugin
 {
     std::string _prefix {"++ Lifetime plugin: "};
 

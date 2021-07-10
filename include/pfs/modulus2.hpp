@@ -7,6 +7,7 @@
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "pfs/modulus2/loader_plugin.hpp"
 #include "pfs/modulus2/module_lifetime_plugin.hpp"
 #include "pfs/modulus2/quit_plugin.hpp"
 #include "pfs/emitter.hpp"
@@ -57,6 +58,14 @@ struct modulus2
     class regular_module;
     class runnable_module;
     class guest_module;
+
+    using module_ctor_t = basic_module * (*)(void);
+    using module_dtor_t = void (*)(basic_module *);
+
+    static void default_module_deleter (basic_module * m)
+    {
+        std::default_delete<basic_module>()(m);
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Runnable interface
@@ -233,13 +242,14 @@ struct modulus2
         }
     }; // basic_module
 
+    using module_pointer = std::unique_ptr<basic_module, module_dtor_t>;
+
     ////////////////////////////////////////////////////////////////////////////
     // module_contex
     ////////////////////////////////////////////////////////////////////////////
     class module_context
     {
         using emitter_cache_type = std::map<api_id_type, basic_emitter_type *>;
-        using module_pointer = std::unique_ptr<basic_module>;
 
         dispatcher *       _dispather_ptr {nullptr};
         module_pointer     _module_ptr;
@@ -266,7 +276,7 @@ struct modulus2
         module_context (dispatcher & d
                 , string_type const & name
                 , string_type const & parent_name
-                , std::unique_ptr<basic_module> && m)
+                , std::unique_ptr<basic_module, module_dtor_t> && m)
             : _dispather_ptr(& d)
             , _module_ptr(std::move(m))
             , _parent_name(parent_name)
@@ -399,11 +409,23 @@ struct modulus2
         using module_context_map_type = typename module_context::map_type;
         using thread_pool_type = std::list<std::thread>;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Plugins' specific data, signals and slots
+    ////////////////////////////////////////////////////////////////////////////
     public:
-        // Module's lifetime specific signals
+        ////////////////////////////////////////////////////////////////////////
+        // Module's lifetime specific data, signals and slots
+        ////////////////////////////////////////////////////////////////////////
+        emitter_type<string_type const &> module_about_to_register;
         emitter_type<string_type const &> module_registered;
         emitter_type<string_type const &> module_unregistered;
         emitter_type<string_type const &> module_started;
+
+    private:
+        ////////////////////////////////////////////////////////////////////////
+        // Loader specific data, signals and slots
+        ////////////////////////////////////////////////////////////////////////
+        std::vector<loader_plugin<modulus2> *> _loaders;
 
     private:
         function_queue_type         _q;
@@ -441,8 +463,10 @@ struct modulus2
         bool register_module_helper (
               string_type const & name
             , string_type const & parent_name
-            , std::unique_ptr<basic_module> && m)
+            , std::unique_ptr<basic_module, module_dtor_t> && m)
         {
+            this->module_about_to_register(name);
+
             // Set parent queue for guest module
             if (m->is_guest()) {
                 auto module_ptr = static_cast<guest_module*>(& *m);
@@ -477,7 +501,7 @@ struct modulus2
                   *this
                 , name
                 , parent_name
-                , std::forward<std::unique_ptr<basic_module>>(m)
+                , std::forward<std::unique_ptr<basic_module, module_dtor_t>>(m)
             };
 
             auto ctx_it = _module_specs.find(ctx.name());
@@ -677,12 +701,24 @@ struct modulus2
             plugin.quit.connect(*this, & dispatcher::quit);
         }
 
-        void attach_plugin (module_lifetime_plugin<string_type> & plugin)
+        void attach_plugin (module_lifetime_plugin & plugin)
         {
-            using plugin_type = module_lifetime_plugin<string_type>;
+            using plugin_type = module_lifetime_plugin;
 
+            module_about_to_register.connect(plugin, & plugin_type::module_about_to_register);
             module_registered.connect(plugin, & plugin_type::module_registered);
             module_unregistered.connect(plugin, & plugin_type::module_unregistered);
+        }
+
+        void attach_plugin (loader_plugin<modulus2> & plugin)
+        {
+            using plugin_type = loader_plugin<modulus2>;
+
+            _loaders.push_back(& plugin);
+            plugin.log_error.connect(*this, & dispatcher::log_error);
+
+//             load_module.connect(plugin, plugin_type::on_load_module);
+//             plugin.module_ready.connect(*this, & dispatcher::on_module_ready);
         }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -754,9 +790,9 @@ struct modulus2
             _main_thread_module = name;
         }
 
-////////////////////////////////////////////////////////////////////////////////
-// Register/unregister modules
-////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
+        // Register/unregister modules
+        ////////////////////////////////////////////////////////////////////////
         /**
          * Register in-source defined module
          */
@@ -765,8 +801,69 @@ struct modulus2
         {
             return register_module_helper(name.first
                 , name.second
-                , make_unique<ModuleClass>(std::forward<Args>(args)...));
+                , std::unique_ptr<ModuleClass, module_dtor_t>(
+                      new ModuleClass(std::forward<Args>(args)...)
+                    , default_module_deleter));
         }
+
+        /**
+         * Register module from dynamic library (using @c loader_plugin successors)
+         */
+        bool register_module_for_path (module_name_type const & name
+            , string_type const & path
+            , std::list<string_type> const & search_dirs = std::list<string_type>{})
+        {
+            bool found = false;
+            bool success = false;
+
+            for (auto & loader: _loaders) {
+                auto m = loader->load_module_for_path(path, search_dirs);
+
+                if (m) {
+                    found = true;
+                    success = register_module_helper(name.first
+                        , name.second, std::move(m));
+                    break;
+                }
+            }
+
+            if (!found) {
+                log_error(fmt::format("no module found by path: {}"
+                    , path));
+            }
+
+            return found && success;
+        }
+
+        /**
+         * Register module from dynamic library (using @c loader_plugin successors)
+         */
+        bool register_module_for_name (module_name_type const & name
+            , string_type const & basename
+            , std::list<string_type> const & search_dirs = std::list<string_type>{})
+        {
+            bool found = false;
+            bool success = false;
+
+            for (auto & loader: _loaders) {
+                auto m = loader->load_module_for_name(basename, search_dirs);
+
+                if (m) {
+                    found = true;
+                    success = register_module_helper(name.first
+                        , name.second, std::move(m));
+                    break;
+                }
+            }
+
+            if (!found) {
+                log_error(fmt::format("no module found by name: {}"
+                    , basename));
+            }
+
+            return found && success;
+        }
+
 
         /**
          * Unregister module with children (if have last)

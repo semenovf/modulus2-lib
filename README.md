@@ -1,4 +1,5 @@
 # modulus2-lib
+(mod[ul]us vivendi, mod[ul]us operandi)
 
 # Usage
 ## Clone from github repository
