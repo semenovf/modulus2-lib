@@ -25,13 +25,15 @@ int main ()
     d.attach_plugin(posix_quit_plugin);
     d.attach_plugin(dl_loader_plugin);
 
+    std::list<std::string> search_paths;
+
 #if defined(_MSC_VER)
-    d.register_module_for_path(std::make_pair("m1", ""), "m1.dll");
+    d.register_module_for_path(std::make_pair("m1", ""), "m1.dll", search_paths);
 #else
-    d.register_module_for_path(std::make_pair("m1", ""), "libm1.so");
+    d.register_module_for_path(std::make_pair("m1", ""), "libm1.so", search_paths);
 #endif
 
-    d.register_module_for_name(std::make_pair("m2", ""), "m2");
+    d.register_module_for_name(std::make_pair("m2", ""), "m2", search_paths);
 
-    return EXIT_SUCCESS;
+    return d.exec() == exit_status::success ? 0 : -1;
 }

@@ -28,10 +28,30 @@ template <typename ModulusType>
 class dl_loader_plugin: public loader_plugin<ModulusType>
 {
     using base_type = loader_plugin<ModulusType>;
+    using basic_module_type = typename base_type::basic_module_type;
     using string_type = typename base_type::string_type;
     using module_pointer = typename base_type::module_pointer;
-    using module_ctor_t = typename base_type::module_ctor_t;
-    using module_dtor_t = typename base_type::module_dtor_t;
+    using module_deleter = typename base_type::module_deleter;
+    using basic_module_deleter = typename base_type::basic_module_deleter;
+    using module_ctor_t = basic_module_type * (*)(void);
+    using module_dtor_t = void (*)(basic_module_type *);
+
+    struct dynamic_module_deleter : public basic_module_deleter
+    {
+        std::shared_ptr<dynamic_library> dlptr;
+        module_dtor_t dtor {nullptr};
+
+        dynamic_module_deleter (std::shared_ptr<dynamic_library> p, module_dtor_t d)
+            : dlptr(p)
+            , dtor(d)
+        {}
+
+        void operator () (basic_module_type * m) const override
+        {
+            if (dtor)
+                dtor(m);
+        }
+    };
 
 public:
     module_pointer load_module_for_path (string_type const & path
@@ -86,7 +106,7 @@ private:
             fprintf(stderr, "module not found: %s\n", dylib_path.c_str());
 #endif
 
-            return module_pointer{nullptr, nullptr};
+            return module_pointer{nullptr, module_deleter{}};
         }
 
         if (!dylib_ptr->open(dylib_path, ec)) {
@@ -105,7 +125,7 @@ private:
                 , dylib_path.c_str()
                 , dylib_ptr->native_error().c_str());
 #endif
-            return module_pointer{nullptr, nullptr};
+            return module_pointer{nullptr, module_deleter{}};
         }
 
         dynamic_library::symbol_type ctor = dylib_ptr->resolve(module_ctor_name, ec);
@@ -116,7 +136,7 @@ private:
                 , string_type(module_ctor_name)
                 , ec.message()));
 
-            return module_pointer{nullptr, nullptr};
+            return module_pointer{nullptr, module_deleter{}};
         }
 
         dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
@@ -126,19 +146,19 @@ private:
                 , dylib_path.native()
                 , ec.message()));
 
-            return module_pointer{nullptr, nullptr};
+            return module_pointer{nullptr, module_deleter{}};
         }
 
         module_ctor_t module_ctor = void_func_ptr_cast<module_ctor_t>(ctor);
         module_dtor_t module_dtor = void_func_ptr_cast<module_dtor_t>(dtor);
 
-        decltype(& *module_pointer{nullptr, nullptr}) ptr = module_ctor();
-
+        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = module_ctor();
 
         if (!ptr)
-            return module_pointer{nullptr, nullptr};
+            return module_pointer{nullptr, module_deleter{}};
 
-        return module_pointer{ptr, module_dtor};
+        return module_pointer{ptr
+            , module_deleter{new dynamic_module_deleter{dylib_ptr, module_dtor}}};
     }
 
     template <typename ForwardPathIt>

@@ -18,9 +18,9 @@ class loader_plugin
 public:
     using string_type = std::string;
     using basic_module_type = typename ModulusType::basic_module;
+    using basic_module_deleter = typename ModulusType::basic_module_deleter;
     using module_pointer = typename ModulusType::module_pointer;
-    using module_ctor_t = typename ModulusType::module_ctor_t;
-    using module_dtor_t = typename ModulusType::module_dtor_t;
+    using module_deleter = typename ModulusType::module_deleter;
 
 public:
     emitter_mt<string_type const &> log_error;

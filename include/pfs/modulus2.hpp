@@ -59,13 +59,46 @@ struct modulus2
     class runnable_module;
     class guest_module;
 
-    using module_ctor_t = basic_module * (*)(void);
-    using module_dtor_t = void (*)(basic_module *);
-
-    static void default_module_deleter (basic_module * m)
+////////////////////////////////////////////////////////////////////////////////
+// Module deleter
+////////////////////////////////////////////////////////////////////////////////
+    struct basic_module_deleter
     {
-        std::default_delete<basic_module>()(m);
-    }
+        virtual void operator () (basic_module * m) const = 0;
+        virtual ~basic_module_deleter () {}
+    };
+
+    struct default_module_deleter: public basic_module_deleter
+    {
+        void operator () (basic_module * m) const override
+        {
+            std::default_delete<basic_module>()(m);
+        }
+
+        virtual ~default_module_deleter () {}
+    };
+
+    struct module_deleter
+    {
+        std::shared_ptr<basic_module_deleter> deleter;
+
+        module_deleter (): deleter(new default_module_deleter)
+        {}
+
+        explicit module_deleter (basic_module_deleter * d)
+            : deleter(d)
+        {}
+
+        explicit module_deleter (std::shared_ptr<basic_module_deleter> d)
+            : deleter(d)
+        {}
+
+        void operator () (basic_module * m) const
+        {
+            if (m)
+                (*deleter)(m);
+        }
+    };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Runnable interface
@@ -161,23 +194,6 @@ struct modulus2
         // For slave module must return master (runnable or dispatcher) queue.
         virtual function_queue_type * queue () const = 0;
 
-        // Returns true if module is guest (if the module is runnable or
-        // dispatcher dependent)
-        virtual bool is_guest () const noexcept
-        {
-            return false;
-        }
-
-        bool is_runnable () const noexcept
-        {
-            return this->queue() != nullptr && !this->is_guest();
-        }
-
-        bool is_regular () const noexcept
-        {
-            return this->queue() == nullptr;
-        }
-
         bool is_quit () const
         {
             return _dispatcher_ptr->is_quit();
@@ -197,6 +213,23 @@ struct modulus2
         }
 
         virtual runnable_interface * runnable () { return nullptr; }
+
+        // Returns true if module is guest (if the module is runnable or
+        // dispatcher dependent)
+        virtual bool is_guest () const noexcept
+        {
+            return false;
+        }
+
+        bool is_runnable () const noexcept
+        {
+            return this->queue() != nullptr && !this->is_guest();
+        }
+
+        bool is_regular () const noexcept
+        {
+            return this->queue() == nullptr;
+        }
 
         void log_trace (string_type const & s)
         {
@@ -242,7 +275,7 @@ struct modulus2
         }
     }; // basic_module
 
-    using module_pointer = std::unique_ptr<basic_module, module_dtor_t>;
+    using module_pointer = std::unique_ptr<basic_module, module_deleter>;
 
     ////////////////////////////////////////////////////////////////////////////
     // module_contex
@@ -276,7 +309,7 @@ struct modulus2
         module_context (dispatcher & d
                 , string_type const & name
                 , string_type const & parent_name
-                , std::unique_ptr<basic_module, module_dtor_t> && m)
+                , module_pointer && m)
             : _dispather_ptr(& d)
             , _module_ptr(std::move(m))
             , _parent_name(parent_name)
@@ -463,7 +496,7 @@ struct modulus2
         bool register_module_helper (
               string_type const & name
             , string_type const & parent_name
-            , std::unique_ptr<basic_module, module_dtor_t> && m)
+            , module_pointer && m)
         {
             this->module_about_to_register(name);
 
@@ -497,12 +530,7 @@ struct modulus2
                 }
             }
 
-            module_context ctx {
-                  *this
-                , name
-                , parent_name
-                , std::forward<std::unique_ptr<basic_module, module_dtor_t>>(m)
-            };
+            module_context ctx {*this, name, parent_name, std::forward<module_pointer>(m)};
 
             auto ctx_it = _module_specs.find(ctx.name());
 
@@ -801,9 +829,9 @@ struct modulus2
         {
             return register_module_helper(name.first
                 , name.second
-                , std::unique_ptr<ModuleClass, module_dtor_t>(
+                , std::unique_ptr<ModuleClass, module_deleter>(
                       new ModuleClass(std::forward<Args>(args)...)
-                    , default_module_deleter));
+                    , module_deleter{}));
         }
 
         /**
