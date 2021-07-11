@@ -11,6 +11,7 @@
 #include <string>
 
 namespace pfs {
+namespace modulus {
 
 template <typename ModulusType>
 class loader_plugin
@@ -39,6 +40,4 @@ public:
     loader_plugin & operator = (loader_plugin &&) = delete;
 };
 
-} // namespace pfs
-
-
+}} // namespace pfs::modulus

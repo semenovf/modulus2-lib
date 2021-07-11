@@ -10,11 +10,11 @@
 #include "pfs/modulus2/loader_plugin.hpp"
 #include "pfs/modulus2/module_lifetime_plugin.hpp"
 #include "pfs/modulus2/quit_plugin.hpp"
+#include "pfs/modulus2/timer_pool.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/fmt.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/memory.hpp"
-#include "pfs/timer_pool.hpp"
 #include <map>
 #include <string>
 #include <thread>
@@ -23,6 +23,7 @@
 #include <cassert>
 
 namespace pfs {
+namespace modulus {
 
 template <typename LoggerType
     , typename PropertiesType = std::true_type
@@ -1083,4 +1084,4 @@ struct modulus2
     };
 };
 
-} // namespace pfs
+}} // namespace pfs::modulus

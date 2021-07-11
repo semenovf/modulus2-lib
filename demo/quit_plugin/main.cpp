@@ -6,25 +6,26 @@
 // Changelog:
 //      2021.06.18 Initial version
 ////////////////////////////////////////////////////////////////////////////////
-#include "pfs/modulus2.hpp"
-#include "pfs/iostream_logger.hpp"
+#include "pfs/modulus2/modulus2.hpp"
+#include "pfs/modulus2/iostream_logger.hpp"
 #include "pfs/modulus2/posix_quit_plugin.hpp"
 #include "pfs/modulus2/timer_quit_plugin.hpp"
 #include <chrono>
 #include <thread>
 #include <iostream>
 
-using modulus2 = pfs::modulus2<pfs::iostream_logger>;
+using modulus2_type = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
+using namespace pfs::modulus;
 
 int main ()
 {
-    using exit_status = modulus2::exit_status;
+    using exit_status = modulus2_type::exit_status;
 
     int timeout = 5; // seconds
-    pfs::iostream_logger logger;
-    modulus2::dispatcher d{logger};
-    pfs::timer_quit_plugin timer_quit_plugin {timeout};
-    pfs::posix_quit_plugin posix_quit_plugin;
+    iostream_logger logger;
+    modulus2_type::dispatcher d{logger};
+    timer_quit_plugin timer_quit_plugin {timeout};
+    posix_quit_plugin posix_quit_plugin;
 
     d.attach_plugin(timer_quit_plugin);
     d.attach_plugin(posix_quit_plugin);

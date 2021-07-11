@@ -13,8 +13,9 @@
 #include <thread>
 
 namespace pfs {
+namespace modulus {
 
-class timer_quit_plugin : public pfs::quit_plugin
+class timer_quit_plugin : public quit_plugin
 {
     std::unique_ptr<std::thread, std::function<void(std::thread*)>> _timer;
     mutable std::condition_variable _cond;
@@ -63,4 +64,4 @@ public:
     }
 };
 
-} // namespace pfs
+}} // namespace pfs::modulus

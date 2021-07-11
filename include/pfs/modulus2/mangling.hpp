@@ -14,6 +14,7 @@
 #include <vector>
 
 namespace pfs {
+namespace modulus {
 
 inline std::string const_prefix () { return std::string{"C"}; }
 inline std::string ptr_prefix () { return std::string{"P"}; }
@@ -192,4 +193,4 @@ inline result_of_matching match_mangled_signatures (
     return result;
 }
 
-} // namespace pfs
+}} // namespace pfs::modulus

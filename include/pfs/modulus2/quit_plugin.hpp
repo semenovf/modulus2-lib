@@ -10,6 +10,7 @@
 #include "pfs/emitter.hpp"
 
 namespace pfs {
+namespace modulus {
 
 class quit_plugin
 {
@@ -28,5 +29,4 @@ public:
     quit_plugin & operator = (quit_plugin &&) = delete;
 };
 
-} // namespace
-
+}} // namespace pfs::modulus

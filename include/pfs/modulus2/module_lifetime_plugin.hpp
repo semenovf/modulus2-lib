@@ -12,6 +12,7 @@
 #include <thread>
 
 namespace pfs {
+namespace modulus {
 
 class module_lifetime_plugin
 {
@@ -48,5 +49,4 @@ public:
     }
 };
 
-} // namespace pfs
-
+}} // namespace pfs::modulus

@@ -18,6 +18,7 @@
 #endif
 
 namespace pfs {
+namespace modulus {
 
 enum  {
     // SIGHUP  - Hangup detected on controlling terminal
@@ -48,7 +49,7 @@ enum  {
             | kill_signal
 };
 
-class posix_quit_plugin : public pfs::quit_plugin
+class posix_quit_plugin : public quit_plugin
 {
     uint16_t _signals;
     static posix_quit_plugin * _instance;
@@ -120,5 +121,4 @@ public:
 
 posix_quit_plugin * posix_quit_plugin::_instance {nullptr};
 
-} // namespace pfs
-
+}} // namespace pfs::modulus

@@ -10,6 +10,7 @@
 #include <iostream>
 
 namespace pfs {
+namespace modulus {
 
 class iostream_logger
 {
@@ -64,4 +65,4 @@ public:
     }
 };
 
-} // namespace pfs
+}} // namespace pfs::modulus

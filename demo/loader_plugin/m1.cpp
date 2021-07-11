@@ -6,10 +6,10 @@
 // Changelog:
 //      2021.07.11 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
-#include "pfs/modulus2.hpp"
-#include "pfs/iostream_logger.hpp"
+#include "pfs/modulus2/modulus2.hpp"
+#include "pfs/modulus2/iostream_logger.hpp"
 
-using modulus2 = pfs::modulus2<pfs::iostream_logger>;
+using modulus2 = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
 
 #if defined(_MSC_VER)
 __declspec(dllexport)

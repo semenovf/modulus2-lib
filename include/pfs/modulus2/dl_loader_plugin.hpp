@@ -17,6 +17,7 @@
 #endif
 
 namespace pfs {
+namespace modulus {
 
 #if defined(PFS_NO_STD_FILESYSTEM)
     namespace fs = pfs::filesystem;
@@ -171,9 +172,4 @@ private:
     }
 };
 
-} // namespace pfs
-
-
-
-
-
+}} // namespace pfs::modulus

@@ -29,6 +29,7 @@
 #include <cstdint>
 
 namespace pfs {
+namespace modulus {
 
 /**
  * Class timer pool based on code by Doug Gale (doug65536) with modifications
@@ -342,4 +343,4 @@ private:
     }
 };
 
-} // namespace pfs
+}} // namespace pfs::modulus

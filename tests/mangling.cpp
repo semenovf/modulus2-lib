@@ -12,7 +12,7 @@
 #include "doctest.h"
 #include "pfs/modulus2/mangling.hpp"
 
-using pfs::mangle;
+using namespace pfs::modulus;
 
 template <typename T>
 void check_primitives_mangling (char c)
@@ -20,12 +20,12 @@ void check_primitives_mangling (char c)
     std::string basic(std::size_t{1}, c);
 
     CHECK_EQ(mangle<T>()        , basic);
-    CHECK_EQ(mangle<const T>()  , pfs::const_prefix()    + basic);
-    CHECK_EQ(mangle<T const>()  , pfs::const_prefix()    + basic);
-    CHECK_EQ(mangle<T *>()      , pfs::ptr_prefix()      + basic);
-    CHECK_EQ(mangle<T const *>(), pfs::constptr_prefix() + basic);
-    CHECK_EQ(mangle<T &>()      , pfs::ref_prefix()      + basic);
-    CHECK_EQ(mangle<T const &>(), pfs::constref_prefix() + basic);
+    CHECK_EQ(mangle<const T>()  , const_prefix()    + basic);
+    CHECK_EQ(mangle<T const>()  , const_prefix()    + basic);
+    CHECK_EQ(mangle<T *>()      , ptr_prefix()      + basic);
+    CHECK_EQ(mangle<T const *>(), constptr_prefix() + basic);
+    CHECK_EQ(mangle<T &>()      , ref_prefix()      + basic);
+    CHECK_EQ(mangle<T const &>(), constref_prefix() + basic);
 }
 
 TEST_CASE("Mangling primitive types") {
