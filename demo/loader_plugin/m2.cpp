@@ -17,7 +17,7 @@ __declspec(dllexport)
 class m2 : public modulus2::regular_module
 {
 public:
-    bool on_start (modulus2::properties_type const &) override
+    bool on_start () override
     {
         log_debug("m2::on_start()");
         return true;

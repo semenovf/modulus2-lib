@@ -18,7 +18,7 @@ endif()
 set(TEST_NAMES
     modulus2
     mangling
-)
+    settings_plugin)
 
 foreach (name ${TEST_NAMES})
     if (${name}_SOURCES)

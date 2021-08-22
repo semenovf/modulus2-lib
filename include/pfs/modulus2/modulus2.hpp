@@ -10,6 +10,7 @@
 #include "pfs/modulus2/loader_plugin.hpp"
 #include "pfs/modulus2/module_lifetime_plugin.hpp"
 #include "pfs/modulus2/quit_plugin.hpp"
+#include "pfs/modulus2/settings_plugin.hpp"
 #include "pfs/modulus2/timer_pool.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/fmt.hpp"
@@ -26,12 +27,10 @@ namespace pfs {
 namespace modulus {
 
 template <typename LoggerType
-    , typename PropertiesType = std::true_type
     , typename ApiIdType = int>
 struct modulus2
 {
     using logger_type = LoggerType;
-    using properties_type = PropertiesType;
     using api_id_type = ApiIdType;
     using string_type = std::string;
 
@@ -262,7 +261,7 @@ struct modulus2
          * Module's on_start() method called after loading and connection
          * completed.
          */
-        virtual bool on_start (properties_type const &)
+        virtual bool on_start ()
         {
             return true;
         }
@@ -477,6 +476,8 @@ struct modulus2
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
 
+        abstract_settings_plugin * _setting_plugin_ptr {nullptr};
+
     private:
         // Logger backend for direct printing
         void direct_print (void (logger_type::*log)(string_type const &)
@@ -594,7 +595,7 @@ struct modulus2
         }
 
         // Thread function for dispatcher and runnable modules
-        exit_status runnable_main (string_type const & name, properties_type const & props)
+        exit_status runnable_main (string_type const & name)
         {
             auto r = exit_status::success;
 
@@ -613,7 +614,7 @@ struct modulus2
                         log_warn(fmt::format("Module [{}] must be runnable"
                             , module_ptr->name()));
                         r = exit_status::failure;
-                    } else if (!module_ptr->on_start(props)) {
+                    } else if (!module_ptr->on_start()) {
                         r = exit_status::failure;
                     }
                 }
@@ -627,7 +628,7 @@ struct modulus2
                         assert(ctx.second.module());
 
                         if (ctx.second.module()->is_guest()) {
-                            if (!ctx.second.module()->on_start(props))
+                            if (!ctx.second.module()->on_start())
                                 r = exit_status::failure;
                         }
                     }
@@ -741,13 +742,26 @@ struct modulus2
 
         void attach_plugin (loader_plugin<modulus2> & plugin)
         {
-            using plugin_type = loader_plugin<modulus2>;
+            //using plugin_type = loader_plugin<modulus2>;
 
             _loaders.push_back(& plugin);
             plugin.log_error.connect(*this, & dispatcher::log_error);
 
 //             load_module.connect(plugin, plugin_type::on_load_module);
 //             plugin.module_ready.connect(*this, & dispatcher::on_module_ready);
+        }
+
+        void attach_plugin (abstract_settings_plugin & plugin)
+        {
+            _setting_plugin_ptr = & plugin;
+        }
+
+        abstract_settings_plugin & settings ()
+        {
+            static null_settings_plugin __default_settings_plugin;
+            return _setting_plugin_ptr
+                ? *_setting_plugin_ptr
+                : __default_settings_plugin;
         }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -925,7 +939,7 @@ struct modulus2
 ////////////////////////////////////////////////////////////////////////////////
 // Main execution loop
 ////////////////////////////////////////////////////////////////////////////////
-        exit_status exec (properties_type const & props = properties_type{})
+        exit_status exec ()
         {
             // Initialize timer pool
             _timer_pool_ptr.reset(new timer_pool);
@@ -947,8 +961,7 @@ struct modulus2
             if (!_main_thread_module.empty()) {
                 thread_pool.emplace_back(& dispatcher::runnable_main
                     , this
-                    , string_type("")
-                    , props);
+                    , string_type(""));
             }
 
             for (auto & ctx: _module_specs) {
@@ -966,14 +979,13 @@ struct modulus2
                     } else {
                         thread_pool.emplace_back(& dispatcher::runnable_main
                             , this
-                            , module_ptr->name()
-                            , props);
+                            , module_ptr->name());
                     }
                 } else if (module_ptr->is_regular()) {
                     log_trace(fmt::format("Module [{}] is regular"
                         , module_ptr->name()));
 
-                    if (!module_ptr->on_start(props))
+                    if (!module_ptr->on_start())
                         r = exit_status::failure;
                 } else {
                     log_trace(fmt::format("Module [{}] is guest"
@@ -984,7 +996,7 @@ struct modulus2
             // Launch dispatcher or "main" module (according to
             // _main_thread_module value)
             if (r == exit_status::success)
-                r = runnable_main(_main_thread_module, props);
+                r = runnable_main(_main_thread_module);
 
             for (auto & th: thread_pool) {
                 if (th.joinable())

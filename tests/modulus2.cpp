@@ -52,7 +52,7 @@ class m1 : public modulus2_type::regular_module
     modulus2_type::emitter_type<Data> emitData;
 
 private:
-    bool on_start (modulus2_type::properties_type const &) override
+    bool on_start () override
     {
         log_debug("on_start()");
 
@@ -140,7 +140,7 @@ class m2 : public modulus2_type::regular_module
     int _counter = 0;
 
 private:
-    bool on_start (modulus2_type::properties_type const &) override
+    bool on_start () override
     {
         log_debug("on_start()");
         return true;
@@ -243,7 +243,7 @@ private:
 class m3 : public modulus2_type::runnable_module
 {
 private:
-    bool on_start (modulus2_type::properties_type const &) override
+    bool on_start () override
     {
         log_debug("on_start()");
         return true;
@@ -281,7 +281,7 @@ class m4 : public modulus2_type::guest_module
     int _counter = 0;
 
 private:
-    bool on_start (modulus2_type::properties_type const &) override
+    bool on_start () override
     {
         log_debug("on_start()");
         return true;
@@ -352,7 +352,7 @@ class m5 : public modulus2_type::guest_module
     int _counter = 0;
 
 private:
-    bool on_start (modulus2_type::properties_type const &) override
+    bool on_start () override
     {
         log_debug("on_start()");
         return true;
