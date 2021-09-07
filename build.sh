@@ -2,7 +2,7 @@
 ################################################################################
 # Copyright (c) 2021 Vladislav Trifochkin
 #
-# This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+# Unified build script for Linux distributions
 #
 # Changelog:
 #      2021.05.20 Initial version
@@ -118,7 +118,7 @@ fi
 
 mkdir -p ${BUILD_DIR} \
     && cd ${BUILD_DIR} \
-    && cmake -G ${BUILD_GENERATOR} $CMAKE_OPTIONS $SOURCE_DIR \
+    && cmake -G "${BUILD_GENERATOR}" $CMAKE_OPTIONS $SOURCE_DIR \
     && cmake --build . \
     && [ -n "$BUILD_TESTS" ] && ctest \
     && [ -n "$ENABLE_COVERAGE" ] && cmake --build . --target Coverage
