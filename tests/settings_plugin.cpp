@@ -7,12 +7,18 @@
 //
 // Changelog:
 //      2021.08.22 Initial version.
+//      2021.09.12 Added RocksDB backend testing.
 ////////////////////////////////////////////////////////////////////////////////
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/in_memory_settings_plugin.hpp"
+#include "pfs/modulus2/plugins/in_memory_settings.hpp"
+
+#if MODULUS2_ROCKSDB_BACKEND_ENABLED
+#   include "pfs/modulus2/plugins/rocksdb_settings.hpp"
+#endif
+
 #include <limits>
 
 using modulus2_type = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
@@ -23,7 +29,7 @@ class m1 : public modulus2_type::regular_module
 private:
     bool on_start () override
     {
-        auto & s = _dispatcher_ptr->settings();
+        auto & s = get_dispatcher().settings();
 
         CHECK_EQ(s.get("value.int", std::intmax_t{0}).to_int()
             , std::numeric_limits<std::intmax_t>::max());
@@ -57,22 +63,46 @@ private:
     }
 };
 
-TEST_CASE("settings_plugin") {
-
+void check (abstract_settings_plugin * settings_ptr)
+{
     using exit_status = modulus2_type::exit_status;
     iostream_logger logger;
     modulus2_type::dispatcher d{logger};
 
-    in_memory_settings_plugin settings;
-    d.attach_plugin(settings);
+    d.attach_plugin(*settings_ptr);
 
-    settings.set("value.int", std::numeric_limits<std::intmax_t>::max());
-    settings.set("value.uint", std::numeric_limits<std::uintmax_t>::max());
-    settings.set("value.real", std::numeric_limits<double>::max());
-    settings.set("value.string.hello", "Hello");
-    settings.set("value.string.world", std::string{"World"});
+    settings_ptr->set("value.int", std::numeric_limits<std::intmax_t>::max());
+    settings_ptr->set("value.uint", std::numeric_limits<std::uintmax_t>::max());
+    settings_ptr->set("value.real", std::numeric_limits<double>::max());
+    settings_ptr->set("value.string.hello", "Hello");
+    settings_ptr->set("value.string.world", std::string{"World"});
 
     CHECK(d.register_module<m1>(std::make_pair("m1", "")));
 
     d.exec();
+}
+
+TEST_CASE("settings_plugin")
+{
+    std::vector<abstract_settings_plugin *> settings_list;
+
+    in_memory_settings_plugin in_memory_settings;
+    settings_list.push_back(& in_memory_settings);
+
+#if MODULUS2_ROCKSDB_BACKEND_ENABLED
+    auto rocksdb_path = fs::temp_directory_path() / "modulus2_rocksdb_settings_plugin";
+
+    rocksdb_settings_plugin rocksdb_settings{rocksdb_path};
+    REQUIRE(rocksdb_settings.initialized());
+
+    settings_list.push_back(& rocksdb_settings);
+#endif
+
+    for (auto settings_ptr: settings_list) {
+        check(settings_ptr);
+    }
+
+#if MODULUS2_ROCKSDB_BACKEND_ENABLED
+    fs::remove_all(rocksdb_path);
+#endif
 }

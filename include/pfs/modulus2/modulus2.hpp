@@ -7,11 +7,11 @@
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/modulus2/loader_plugin.hpp"
-#include "pfs/modulus2/module_lifetime_plugin.hpp"
-#include "pfs/modulus2/quit_plugin.hpp"
-#include "pfs/modulus2/settings_plugin.hpp"
 #include "pfs/modulus2/timer_pool.hpp"
+#include "pfs/modulus2/plugins/loader.hpp"
+#include "pfs/modulus2/plugins/module_lifetime.hpp"
+#include "pfs/modulus2/plugins/quit.hpp"
+#include "pfs/modulus2/plugins/settings.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/fmt.hpp"
 #include "pfs/function_queue.hpp"
@@ -173,6 +173,18 @@ struct modulus2
         void set_dispatcher (dispatcher * pdisp) noexcept
         {
             _dispatcher_ptr = pdisp;
+        }
+
+        dispatcher const & get_dispatcher () const noexcept
+        {
+            assert(_dispatcher_ptr);
+            return *_dispatcher_ptr;
+        }
+
+        dispatcher & get_dispatcher () noexcept
+        {
+            assert(_dispatcher_ptr);
+            return *_dispatcher_ptr;
         }
 
         void set_name (string_type const & name) noexcept
@@ -704,6 +716,8 @@ struct modulus2
     ////////////////////////////////////////////////////////////////////////////
         dispatcher (dispatcher const &) = delete;
         dispatcher & operator = (dispatcher const &) = delete;
+        dispatcher (dispatcher &&) = delete;
+        dispatcher & operator = (dispatcher &&) = delete;
 
         dispatcher (logger_type & logger)
             : _logger_ptr(& logger)
@@ -754,6 +768,7 @@ struct modulus2
         void attach_plugin (abstract_settings_plugin & plugin)
         {
             _setting_plugin_ptr = & plugin;
+            plugin.log_error.connect(*this, & dispatcher::log_error);
         }
 
         abstract_settings_plugin & settings ()

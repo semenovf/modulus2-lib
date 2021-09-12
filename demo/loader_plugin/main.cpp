@@ -8,8 +8,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/posix_quit_plugin.hpp"
-#include "pfs/modulus2/dl_loader_plugin.hpp"
+#include "pfs/modulus2/plugins/posix_quit.hpp"
+#include "pfs/modulus2/plugins/dl_loader.hpp"
 
 using modulus2_type = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
 using namespace pfs::modulus;

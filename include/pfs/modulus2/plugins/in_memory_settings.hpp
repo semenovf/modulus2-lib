@@ -7,7 +7,7 @@
 //      2021.08.22 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "settings_plugin.hpp"
+#include "settings.hpp"
 #include <map>
 #include <mutex>
 #include <string>
@@ -29,13 +29,6 @@ public:
     {
         std::lock_guard<std::mutex> lock{_mtx};
         auto v = property{value};
-        _s[key] = std::move(v);
-    }
-
-    void set (property::key_type && key, property::value_type && value) override
-    {
-        std::lock_guard<std::mutex> lock{_mtx};
-        auto v = property{std::move(value)};
         _s[key] = std::move(v);
     }
 

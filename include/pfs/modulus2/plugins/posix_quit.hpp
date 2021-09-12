@@ -8,7 +8,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "pfs/emitter.hpp"
-#include "quit_plugin.hpp"
+#include "quit.hpp"
 #include <algorithm>
 
 #if _POSIX_C_SOURCE

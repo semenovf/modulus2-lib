@@ -7,7 +7,7 @@
 //      2021.07.10 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "loader_plugin.hpp"
+#include "loader.hpp"
 #include "pfs/dynamic_library.hpp"
 #include "pfs/fmt.hpp"
 #include <memory>

@@ -7,7 +7,7 @@
 //      2021.06.27 Initial version
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "quit_plugin.hpp"
+#include "quit.hpp"
 #include <condition_variable>
 #include <memory>
 #include <thread>

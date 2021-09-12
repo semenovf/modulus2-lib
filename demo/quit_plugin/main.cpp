@@ -8,8 +8,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/posix_quit_plugin.hpp"
-#include "pfs/modulus2/timer_quit_plugin.hpp"
+#include "pfs/modulus2/plugins/posix_quit.hpp"
+#include "pfs/modulus2/plugins/timer_quit.hpp"
 #include <chrono>
 #include <thread>
 #include <iostream>
