@@ -7,7 +7,6 @@
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/modulus2/timer_pool.hpp"
 #include "pfs/modulus2/plugins/loader.hpp"
 #include "pfs/modulus2/plugins/module_lifetime.hpp"
 #include "pfs/modulus2/plugins/quit.hpp"
@@ -16,6 +15,7 @@
 #include "pfs/fmt.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/memory.hpp"
+#include "pfs/timer_pool.hpp"
 #include <map>
 #include <string>
 #include <thread>

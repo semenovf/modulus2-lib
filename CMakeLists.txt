@@ -16,6 +16,9 @@ option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DEMO "Build examples/demo" ON)
 option(ENABLE_COVERAGE "Build tests with coverage support" OFF)
 
+# For demo
+option(MODULUS2_ENABLE_SPDLOG "Enable `spdlog` library for logger" ON)
+
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "C++ compiler version: ${CMAKE_CXX_COMPILER_VERSION}")
 
