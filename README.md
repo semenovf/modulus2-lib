@@ -26,21 +26,15 @@ $ git submodule update --init -- 3rdparty/spdlog
 
 ## Build tests, examples, demos on Linux
 
-### Using bash script
 ```sh
 $ export SOURCE_DIR=modulus2
 $ export BUILD_TYPE=Debug    # optional (default is Debug)
-$ export BUILD_STRICT=OFF    # optional (default is ON)
 $ export CXX_STANDARD=11     # optional (default is unset)
 $ export CXX_COMPILER=g++-9  # optional (default is unset)
 $ export C_COMPILER=gcc-9    # optional (default is unset)
-$ export BUILD_TESTS=ON      # optional (default is unset)
-$ export BUILD_DEMO=OFF      # optional (default is unset)
-$ export ENABLE_COVERAGE=OFF # optional (default is unset)
+$ export PFS_MODULUS2_LIB__BUILD_STRICT=OFF    # optional (default is ON)
+$ export PFS_MODULUS2_LIB__BUILD_TESTS=ON      # optional (default is OFF)
+$ export PFS_MODULUS2_LIB__BUILD_DEMO=ON       # optional (default is OFF)
+$ export PFS_MODULUS2_LIB__ENABLE_COVERAGE=OFF # optional (default is OFF)
 $ $SOURCE_DIR/build.sh
-```
-
-### Manually
-```sh
-
 ```
