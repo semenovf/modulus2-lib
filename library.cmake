@@ -36,6 +36,13 @@ if (PFS_MODULUS2_LIB__ENABLE_ROCKSDB)
             set(WITH_BENCHMARK_TOOLS OFF CACHE BOOL "Disable build benchmarks for RocksDB")
             set(WITH_CORE_TOOLS OFF CACHE BOOL "Disable build core tools for RocksDB")
             set(WITH_TOOLS OFF CACHE BOOL "Disable build tools for RocksDB")
+            #set(FAIL_ON_WARNINGS OFF CACHE BOOL "Disable process warnings as errors for RocksDB")
+
+            # Disable error for g++ 11.2.0 (RocksDB v6.25.3)
+            # error: ‘hostname_buf’ may be used uninitialized [-Werror=maybe-uninitialized]
+            if (CMAKE_COMPILER_IS_GNUCXX)
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized")
+            endif()
 
             add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rocksdb)
             target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rocksdb/include)

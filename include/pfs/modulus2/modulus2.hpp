@@ -1112,3 +1112,11 @@ struct modulus2
 };
 
 }} // namespace pfs::modulus
+
+#ifndef PFS_MODULUS2_LIB__MODULE_EXPORT
+#   if _MSC_VER
+#       define PFS_MODULUS2_LIB__MODULE_EXPORT __declspec(dllexport)
+#   else
+#       define PFS_MODULUS2_LIB__MODULE_EXPORT
+#   endif
+#endif // !PFS_MODULUS2_LIB__MODULE_EXPORT
