@@ -15,7 +15,7 @@
 #include "pfs/modulus2/iostream_logger.hpp"
 #include "pfs/modulus2/plugins/in_memory_settings.hpp"
 
-#if PFS_MODULUS2_LIB__ENABLE_ROCKSDB
+#if PFS_MODULUS2_LIB__ROCKSDB_ENABLED
 #   include "pfs/modulus2/plugins/rocksdb_settings.hpp"
 #endif
 
@@ -89,7 +89,7 @@ TEST_CASE("settings_plugin")
     in_memory_settings_plugin in_memory_settings;
     settings_list.push_back(& in_memory_settings);
 
-#if PFS_MODULUS2_LIB__ENABLE_ROCKSDB
+#if PFS_MODULUS2_LIB__ROCKSDB_ENABLED
     auto rocksdb_path = fs::temp_directory_path() / "modulus2_rocksdb_settings_plugin";
 
     rocksdb_settings_plugin rocksdb_settings{rocksdb_path};
@@ -102,7 +102,7 @@ TEST_CASE("settings_plugin")
         check(settings_ptr);
     }
 
-#if PFS_MODULUS2_LIB__ENABLE_ROCKSDB
+#if PFS_MODULUS2_LIB__ROCKSDB_ENABLED
     fs::remove_all(rocksdb_path);
 #endif
 }

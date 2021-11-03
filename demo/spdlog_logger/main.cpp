@@ -22,13 +22,7 @@
 
 using modulus2_type = pfs::modulus::modulus2<pfs::modulus::spdlog_logger>;
 using namespace pfs::modulus;
-
-#if defined(PFS_NO_STD_FILESYSTEM)
-    namespace fs = pfs::filesystem;
-#else
-    namespace fs = std::filesystem;
-#endif
-
+namespace fs = pfs::filesystem;
 
 class m1 : public modulus2_type::regular_module
 {

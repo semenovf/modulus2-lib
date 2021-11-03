@@ -18,11 +18,7 @@
 namespace pfs {
 namespace modulus {
 
-#if defined(PFS_NO_STD_FILESYSTEM)
-    namespace fs = pfs::filesystem;
-#else
-    namespace fs = std::filesystem;
-#endif
+namespace fs = pfs::filesystem;
 
 // See https://github.com/facebook/rocksdb
 //     https://github.com/facebook/rocksdb/blob/main/examples/simple_example.cc
