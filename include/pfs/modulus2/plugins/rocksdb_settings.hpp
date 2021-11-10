@@ -24,8 +24,8 @@ namespace fs = pfs::filesystem;
 //     https://github.com/facebook/rocksdb/blob/main/examples/simple_example.cc
 class rocksdb_settings_plugin: public abstract_settings_plugin
 {
-    static constexpr int MAJOR_VERSION = 1;
-    static constexpr int MINOR_VERSION = 0;
+    const int MAJOR_VERSION {1};
+    const int MINOR_VERSION {0};
 
     enum class type_prefix: char {
           bad_type    = '\x0'
@@ -350,9 +350,6 @@ public:
         return result.has_value() ? result : property{default_value};
     }
 };
-
-constexpr int rocksdb_settings_plugin::MAJOR_VERSION;
-constexpr int rocksdb_settings_plugin::MINOR_VERSION;
 
 }} // namespace pfs::modulus
 
