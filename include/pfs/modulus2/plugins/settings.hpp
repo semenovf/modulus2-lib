@@ -16,18 +16,6 @@
 namespace pfs {
 namespace modulus {
 
-#if defined(PFS_NO_STD_VARIANT)
-    template <typename... Types>
-    using variant_type = pfs::variant<Types...>;
-    using ::pfs::get;
-    using ::pfs::holds_alternative;
-#else
-    template <typename... Types>
-    using variant_type = std::variant<Types...>;
-    using ::std::get;
-    using ::std::holds_alternative;
-#endif
-
 class property
 {
 public:
@@ -38,7 +26,7 @@ public:
     using string_type = std::string;
 
     using key_type    = string_type;
-    using value_type  = variant_type<
+    using value_type  = variant<
           bool_type
         , int_type
         , uint_type
