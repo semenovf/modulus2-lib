@@ -5,7 +5,7 @@
 ################################################################################
 project(modulus2-lib-TESTS CXX C)
 
-if (PFS_MODULUS2_LIB__ENABLE_COVERAGE)
+if (PFS_MODULUS2__ENABLE_COVERAGE)
     message(STATUS "Coverage feature enabled")
 
     if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -34,7 +34,7 @@ foreach (name ${TEST_NAMES})
     #       This option is used to compile and link code instrumented for
     #       coverage analysis. The option is a synonym for -fprofile-arcs
     #       -ftest-coverage (when compiling) and -lgcov (when linking).
-    if (PFS_MODULUS2_LIB__ENABLE_COVERAGE)
+    if (PFS_MODULUS2__ENABLE_COVERAGE)
         target_compile_options(${name} PRIVATE -g -O0 --coverage)
         target_link_libraries(${name} PRIVATE -g -O0 --coverage)
     endif()
@@ -43,7 +43,7 @@ foreach (name ${TEST_NAMES})
     add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-if (PFS_MODULUS2_LIB__ENABLE_COVERAGE)
+if (PFS_MODULUS2__ENABLE_COVERAGE)
     include(${CMAKE_SOURCE_DIR}/cmake/Coverage.cmake)
     coverage_target("'/usr/*';'*/doctest.h'")
 endif()

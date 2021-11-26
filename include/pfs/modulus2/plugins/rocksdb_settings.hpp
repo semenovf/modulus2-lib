@@ -278,7 +278,15 @@ public:
     using abstract_settings_plugin::set;
     using abstract_settings_plugin::get;
 
-    rocksdb_settings_plugin (fs::path const & db_path)
+    rocksdb_settings_plugin () {}
+
+    ~rocksdb_settings_plugin ()
+    {
+        if (_db)
+            delete _db;
+    }
+
+    bool initialize (fs::path const & db_path)
     {
         rocksdb::Options options;
 
@@ -304,7 +312,7 @@ public:
             print_error(fmt::format("failed to create/open database `{}': {}"
                 , db_path.native()
                 , status.ToString()));
-            return;
+            return false;
         }
 
         // Database just created, write version.
@@ -317,17 +325,8 @@ public:
                 _db = nullptr;
             }
         }
-    }
 
-    ~rocksdb_settings_plugin ()
-    {
-        if (_db)
-            delete _db;
-    }
-
-    bool initialized () const noexcept
-    {
-        return _db != nullptr;
+        return true;
     }
 
     void set (property::key_type const & key, property::value_type const & value) override
@@ -352,5 +351,3 @@ public:
 };
 
 }} // namespace pfs::modulus
-
-

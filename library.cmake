@@ -9,17 +9,17 @@
 cmake_minimum_required (VERSION 3.5)
 project(modulus2-lib CXX C)
 
-option(PFS_MODULUS2_LIB__ENABLE_SPDLOG "Enable `spdlog` library for logger" OFF)
-option(PFS_MODULUS2_LIB__ENABLE_ROCKSDB "Enable `RocksDb` library as backend for settings" OFF)
+option(PFS_MODULUS2__ENABLE_SPDLOG "Enable `spdlog` library for logger" OFF)
+option(PFS_MODULUS2__ENABLE_ROCKSDB "Enable `RocksDb` library as backend for settings" OFF)
 
 # Set default `spdlog` root path
-if (PFS_MODULUS2_LIB__ENABLE_SPDLOG AND NOT PFS_MODULUS2_LIB__SPDLOG_ROOT)
-    set(PFS_MODULUS2_LIB__SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/spdlog")
+if (PFS_MODULUS2__ENABLE_SPDLOG AND NOT PFS_MODULUS2__SPDLOG_ROOT)
+    set(PFS_MODULUS2__SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/spdlog")
 endif()
 
 # Set default `rocksdb` root path
-if (PFS_MODULUS2_LIB__ENABLE_ROCKSDB AND NOT PFS_MODULUS2_LIB__ROCKSDB_ROOT)
-    set(PFS_MODULUS2_LIB__ROCKSDB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rocksdb")
+if (PFS_MODULUS2__ENABLE_ROCKSDB AND NOT PFS_MODULUS2__ROCKSDB_ROOT)
+    set(PFS_MODULUS2__ROCKSDB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rocksdb")
 endif()
 
 add_library(${PROJECT_NAME} INTERFACE)
@@ -32,11 +32,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
     target_compile_definitions(${PROJECT_NAME} INTERFACE "-D_POSIX_C_SOURCE=1")
 endif()
 
-if (PFS_MODULUS2_LIB__ENABLE_ROCKSDB)
+if (PFS_MODULUS2__ENABLE_ROCKSDB)
     if (NOT TARGET rocksdb)
         find_library(ROCKSDB_LIBRARY rocksdb)
 
-        if (NOT ROCKSDB_LIBRARY AND EXISTS ${PFS_MODULUS2_LIB__ROCKSDB_ROOT}/CMakeLists.txt)
+        if (NOT ROCKSDB_LIBRARY AND EXISTS ${PFS_MODULUS2__ROCKSDB_ROOT}/CMakeLists.txt)
 
             #
             # https://github.com/facebook/rocksdb/blob/main/INSTALL.md
@@ -55,8 +55,8 @@ if (PFS_MODULUS2_LIB__ENABLE_ROCKSDB)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized")
             endif()
 
-            add_subdirectory(${PFS_MODULUS2_LIB__ROCKSDB_ROOT} rocksdb)
-            target_include_directories(${PROJECT_NAME} INTERFACE ${PFS_MODULUS2_LIB__ROCKSDB_ROOT}/include)
+            add_subdirectory(${PFS_MODULUS2__ROCKSDB_ROOT} rocksdb)
+            target_include_directories(${PROJECT_NAME} INTERFACE ${PFS_MODULUS2__ROCKSDB_ROOT}/include)
             set(ROCKSDB_LIBRARY rocksdb)
         endif()
     else()
@@ -65,20 +65,20 @@ if (PFS_MODULUS2_LIB__ENABLE_ROCKSDB)
 
     if (ROCKSDB_LIBRARY)
         target_link_libraries(${PROJECT_NAME} INTERFACE ${ROCKSDB_LIBRARY})
-        target_compile_definitions(${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2_LIB__ROCKSDB_ENABLED=1")
+        target_compile_definitions(${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2__ROCKSDB_ENABLED=1")
         message(STATUS "`RocksDB` backend enabled")
     else()
         message(WARNING "Unable to enable `RocksDB` backend")
     endif()
 endif()
 
-if (PFS_MODULUS2_LIB__ENABLE_SPDLOG)
+if (PFS_MODULUS2__ENABLE_SPDLOG)
     if (NOT TARGET spdlog::spdlog)
-        add_subdirectory(${PFS_MODULUS2_LIB__SPDLOG_ROOT} spdlog)
-        target_include_directories(${PROJECT_NAME} INTERFACE ${PFS_MODULUS2_LIB__SPDLOG_ROOT}/include)
+        add_subdirectory(${PFS_MODULUS2__SPDLOG_ROOT} spdlog)
+        target_include_directories(${PROJECT_NAME} INTERFACE ${PFS_MODULUS2__SPDLOG_ROOT}/include)
     endif()
 
     target_link_libraries(${PROJECT_NAME} INTERFACE spdlog::spdlog)
-    target_compile_definitions(${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2_LIB__SPDLOG_ENABLED=1")
+    target_compile_definitions(${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2__SPDLOG_ENABLED=1")
     message(STATUS "`spdlog` enabled")
 endif()

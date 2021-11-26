@@ -19,12 +19,6 @@
 namespace pfs {
 namespace modulus {
 
-#if defined(PFS_NO_STD_FILESYSTEM)
-    namespace fs = pfs::filesystem;
-#else
-    namespace fs = std::filesystem;
-#endif
-
 template <typename ModulusType>
 class dl_loader_plugin: public loader_plugin<ModulusType>
 {
