@@ -16,11 +16,19 @@ namespace modulus {
 
 class spdlog_logger
 {
-    spdlog::logger * _logger_ptr {nullptr};
+    spdlog::logger * _backend_ptr {nullptr};
+
+protected:
+    spdlog_logger () {}
+
+    void set_backend (spdlog::logger * backend)
+    {
+        _backend_ptr = backend;
+    }
 
 public:
     spdlog_logger (spdlog::logger & logger)
-        : _logger_ptr(& logger)
+        : _backend_ptr(& logger)
     {
         // Set error handler
         spdlog::set_error_handler([] (std::string const & msg) {
@@ -33,9 +41,9 @@ public:
         // spdlog::set_pattern("%d-%m-%Y %H:%M:%S.%e %z [%^%l%$] %v");
         //
         // 27-03-2020 09:53:19.466 [D] Some message
-        _logger_ptr->set_pattern("%d-%m-%Y %H:%M:%S.%e [%^%L%$] %v");
-        _logger_ptr->set_level(spdlog::level::info);
-        _logger_ptr->flush_on(spdlog::level::info);
+        _backend_ptr->set_pattern("%d-%m-%Y %H:%M:%S.%e [%^%L%$] %v");
+        _backend_ptr->set_level(spdlog::level::info);
+        _backend_ptr->flush_on(spdlog::level::info);
     }
 
     ~spdlog_logger () = default;
@@ -48,40 +56,40 @@ public:
 
     void set_level (spdlog::level::level_enum level, bool flash_on = true)
     {
-        _logger_ptr->set_level(level);
+        _backend_ptr->set_level(level);
 
         if (flash_on)
-            _logger_ptr->flush_on(level);
+            _backend_ptr->flush_on(level);
     }
 
     void set_pattern (std::string const & pattern)
     {
-        _logger_ptr->set_pattern(pattern);
+        _backend_ptr->set_pattern(pattern);
     }
 
     void trace (std::string const & msg)
     {
-        _logger_ptr->trace(msg);
+        _backend_ptr->trace(msg);
     }
 
     void debug (std::string const & msg)
     {
-        _logger_ptr->debug(msg);
+        _backend_ptr->debug(msg);
     }
 
     void info (std::string const & msg)
     {
-        _logger_ptr->info(msg);
+        _backend_ptr->info(msg);
     }
 
     void warn (std::string const & msg)
     {
-        _logger_ptr->warn(msg);
+        _backend_ptr->warn(msg);
     }
 
     void error (std::string const & msg)
     {
-        _logger_ptr->error(msg);
+        _backend_ptr->error(msg);
     }
 };
 
