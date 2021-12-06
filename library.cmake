@@ -17,6 +17,10 @@ portable_target(LIBRARY ${PROJECT_NAME} INTERFACE ALIAS pfs::modulus2)
 portable_target(INCLUDE_DIRS ${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::common)
 
+portable_target(LIBRARY ${PROJECT_NAME}-core INTERFACE ALIAS pfs::modulus2::core)
+portable_target(INCLUDE_DIRS ${PROJECT_NAME}-core INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+portable_target(LINK ${PROJECT_NAME}-core INTERFACE pfs::common)
+
 #if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
         #OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
     #target_compile_definitions(${PROJECT_NAME} INTERFACE "-D_POSIX_C_SOURCE=1")
@@ -36,11 +40,14 @@ if (PFS_MODULUS2__ENABLE_SPDLOG)
     include(FindSpdlog)
 
     if (PFS_SPDLOG__LIBRARY)
-        target_link_libraries(${PROJECT_NAME} INTERFACE ${PFS_SPDLOG__LIBRARY})
-        target_compile_definitions(${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2__SPDLOG_ENABLED=1")
+        portable_target(DEFINITIONS ${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2__SPDLOG_ENABLED=1")
+
+        portable_target(LINK ${PROJECT_NAME}-core INTERFACE ${PFS_SPDLOG__LIBRARY})
+        portable_target(DEFINITIONS ${PROJECT_NAME}-core INTERFACE "-DPFS_MODULUS2__SPDLOG_ENABLED=1")
 
         if (PFS_SPDLOG__INCLUDE_DIR)
-            target_include_directories(${PROJECT_NAME} INTERFACE ${PFS_SPDLOG__INCLUDE_DIR})
+            portable_target(INCLUDE_DIRS ${PROJECT_NAME} INTERFACE ${PFS_SPDLOG__INCLUDE_DIR})
+            portable_target(INCLUDE_DIRS ${PROJECT_NAME}-core INTERFACE ${PFS_SPDLOG__INCLUDE_DIR})
         endif()
 
         message(STATUS "`spdlog` enabled")
@@ -51,11 +58,13 @@ if (PFS_MODULUS2__ENABLE_ROCKSDB)
     include(FindRocksDB)
 
     if (PFS_ROCKSDB__LIBRARY)
-        target_link_libraries(${PROJECT_NAME} INTERFACE ${PFS_ROCKSDB__LIBRARY})
-        target_compile_definitions(${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2__ROCKSDB_ENABLED=1")
+        portable_target(DEFINITIONS ${PROJECT_NAME} INTERFACE "-DPFS_MODULUS2__ROCKSDB_ENABLED=1")
+
+        portable_target(LINK ${PROJECT_NAME}-core INTERFACE ${PFS_ROCKSDB__LIBRARY})
+        portable_target(DEFINITIONS ${PROJECT_NAME}-core INTERFACE "-DPFS_MODULUS2__ROCKSDB_ENABLED=1")
 
         if (PFS_ROCKSDB__INCLUDE_DIR)
-            target_include_directories(${PROJECT_NAME} INTERFACE ${PFS_ROCKSDB__INCLUDE_DIR})
+            portable_target(INCLUDE_DIRS ${PROJECT_NAME}-core INTERFACE ${PFS_ROCKSDB__INCLUDE_DIR})
         endif()
 
         message(STATUS "`RocksDB` backend enabled")
