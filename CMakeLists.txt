@@ -29,10 +29,6 @@ if (PFS_MODULUS2__BUILD_STRICT)
     set(CMAKE_CXX_EXTENSIONS OFF) # use -std=c++XX rather than -std=gnu++XX
 endif()
 
-if (NOT TARGET pfs::common)
-    include(${CMAKE_CURRENT_LIST_DIR}/3rdparty/pfs/common/library.cmake)
-endif()
-
 include(${CMAKE_CURRENT_LIST_DIR}/library.cmake)
 
 if (PFS_MODULUS2__BUILD_TESTS AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
