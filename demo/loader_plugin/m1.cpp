@@ -9,11 +9,8 @@
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
 
-using modulus2 = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
+using modulus2 = modulus::modulus2<modulus::iostream_logger>;
 
-#if defined(_MSC_VER)
-__declspec(dllexport)
-#endif
 class m1 : public modulus2::regular_module
 {
 public:
@@ -32,20 +29,14 @@ public:
 
 extern "C" {
 
-#if defined(_MSC_VER)
-__declspec(dllexport)
-#endif
-modulus2::basic_module * __module_ctor__ (void)
+MODULUS2__MODULE_EXPORT modulus2::basic_module * __module_ctor__ (void)
 {
     auto m = new m1;
     std::cout << "+Construct m1\n";
     return m;
 }
 
-#if defined(_MSC_VER)
-__declspec(dllexport)
-#endif
-void  __module_dtor__ (modulus2::basic_module * m)
+MODULUS2__MODULE_EXPORT void  __module_dtor__ (modulus2::basic_module * m)
 {
     std::cout << "~Destruct 'm1'\n";
     delete m;

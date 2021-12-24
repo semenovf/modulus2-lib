@@ -20,11 +20,10 @@
 #   include "spdlog/sinks/android_sink.h"
 #endif
 
-using modulus2_type = pfs::modulus::modulus2<pfs::modulus::spdlog_logger>;
-using namespace pfs::modulus;
+using modulus2_t = modulus::modulus2<modulus::spdlog_logger>;
 namespace fs = pfs::filesystem;
 
-class m1 : public modulus2_type::regular_module
+class m1 : public modulus2_t::regular_module
 {
 private:
     bool on_start () override
@@ -56,7 +55,7 @@ public:
 
 int main ()
 {
-    using exit_status = modulus2_type::exit_status;
+    using exit_status = modulus2_t::exit_status;
 
     ////////////////////////////////////////////////////////////////////////////
     // Creating loggers with multiple sinks
@@ -73,11 +72,11 @@ int main ()
     ////////////////////////////////////////////////////////////////////////////
 
     spdlog::logger logger_backend {"modulus2_spdlog_logger", begin(sinks), end(sinks)};
-    spdlog_logger logger {logger_backend};
+    modulus::spdlog_logger logger {logger_backend};
     logger.set_level(spdlog::level::trace);
 
-    modulus2_type::dispatcher d{logger};
-    posix_quit_plugin posix_quit_plugin;
+    modulus2_t::dispatcher d{logger};
+    modulus::posix_quit_plugin posix_quit_plugin;
 
     d.attach_plugin(posix_quit_plugin);
     d.register_module<m1>(std::make_pair("m1", ""));

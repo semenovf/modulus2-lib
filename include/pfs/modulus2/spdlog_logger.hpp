@@ -11,7 +11,6 @@
 #pragma once
 #include "spdlog/spdlog.h"
 
-namespace pfs {
 namespace modulus {
 
 class spdlog_logger
@@ -93,5 +92,4 @@ public:
     }
 };
 
-}} // namespace pfs::modulus
-
+} // namespace modulus

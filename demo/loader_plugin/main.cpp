@@ -11,17 +11,17 @@
 #include "pfs/modulus2/plugins/posix_quit.hpp"
 #include "pfs/modulus2/plugins/dl_loader.hpp"
 
-using modulus2_type = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
-using namespace pfs::modulus;
+using modulus2_type = modulus::modulus2<modulus::iostream_logger>;
 
 int main ()
 {
     using exit_status = modulus2_type::exit_status;
 
-    iostream_logger logger;
+    modulus::iostream_logger logger;
+    modulus::posix_quit_plugin posix_quit_plugin;
+    modulus::dl_loader_plugin<modulus2_type> dl_loader_plugin;
+
     modulus2_type::dispatcher d{logger};
-    posix_quit_plugin posix_quit_plugin;
-    dl_loader_plugin<modulus2_type> dl_loader_plugin;
 
     d.attach_plugin(posix_quit_plugin);
     d.attach_plugin(dl_loader_plugin);

@@ -23,7 +23,6 @@
 #include <utility>
 #include <cassert>
 
-namespace pfs {
 namespace modulus {
 
 template <typename LoggerType
@@ -35,10 +34,10 @@ struct modulus2
     using string_type = std::string;
 
     template <typename ...Args>
-    using emitter_type = emitter_mt<Args...>;
-    using basic_emitter_type = emitter_mt<>;
+    using emitter_type = pfs::emitter_mt<Args...>;
+    using basic_emitter_type = pfs::emitter_mt<>;
 
-    using function_queue_type = function_queue<>;
+    using function_queue_type = pfs::function_queue<>;
     using module_name_type = std::pair<string_type, string_type>;
 
     using thread_pool_type = std::list<std::thread>;
@@ -450,6 +449,7 @@ struct modulus2
         friend class runnable_module;
         friend class guest_module;
 
+        using timer_pool_type = pfs::timer_pool;
         using string_type = modulus2::string_type;
         using module_context_map_type = typename module_context::map_type;
         using thread_pool_type = std::list<std::thread>;
@@ -473,9 +473,10 @@ struct modulus2
         std::vector<loader_plugin<modulus2> *> _loaders;
 
     private:
-        function_queue_type         _q;
-        std::unique_ptr<timer_pool> _timer_pool_ptr;
-        module_context_map_type     _module_specs;
+        function_queue_type              _q;
+        std::unique_ptr<timer_pool_type> _timer_pool_ptr;
+        module_context_map_type          _module_specs;
+
         intmax_t _wait_period {10000}; // wait period in microseconds
                                        // (default is 10 milliseconds)
 
@@ -488,7 +489,8 @@ struct modulus2
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
 
-        abstract_settings_plugin * _setting_plugin_ptr {nullptr};
+        null_settings_plugin _null_settings_plugin;
+        abstract_settings_plugin * _settings_plugin{nullptr};
 
     private:
         // Logger backend for direct printing
@@ -723,6 +725,8 @@ struct modulus2
             : _logger_ptr(& logger)
             , _log_printer(& dispatcher::direct_print)
         {
+            _settings_plugin = & _null_settings_plugin;
+
 //             // Initialize timer pool
 //             _ptimer_pool.reset(new timer_pool_type);
         }
@@ -756,10 +760,8 @@ struct modulus2
 
         void attach_plugin (loader_plugin<modulus2> & plugin)
         {
-            //using plugin_type = loader_plugin<modulus2>;
-
             _loaders.push_back(& plugin);
-            plugin.log_error.connect(*this, & dispatcher::log_error);
+            plugin.failure.connect(*this, & dispatcher::log_error);
 
 //             load_module.connect(plugin, plugin_type::on_load_module);
 //             plugin.module_ready.connect(*this, & dispatcher::on_module_ready);
@@ -767,16 +769,16 @@ struct modulus2
 
         void attach_plugin (abstract_settings_plugin & plugin)
         {
-            _setting_plugin_ptr = & plugin;
-            plugin.log_error.connect(*this, & dispatcher::log_error);
+            if (_settings_plugin)
+                _settings_plugin->failure.disconnect_all();
+
+            _settings_plugin = & plugin;
+            _settings_plugin->failure.connect(*this, & dispatcher::log_error);
         }
 
         abstract_settings_plugin & settings ()
         {
-            static null_settings_plugin __default_settings_plugin;
-            return _setting_plugin_ptr
-                ? *_setting_plugin_ptr
-                : __default_settings_plugin;
+            return *_settings_plugin;
         }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -957,7 +959,7 @@ struct modulus2
         exit_status exec ()
         {
             // Initialize timer pool
-            _timer_pool_ptr.reset(new timer_pool);
+            _timer_pool_ptr.reset(new timer_pool_type);
 
             auto r = exit_status::success;
             thread_pool_type thread_pool;
@@ -1111,12 +1113,12 @@ struct modulus2
     };
 };
 
-}} // namespace pfs::modulus
+} // namespace modulus
 
-#ifndef PFS_MODULUS2__MODULE_EXPORT
+#ifndef MODULUS2__MODULE_EXPORT
 #   if _MSC_VER
-#       define PFS_MODULUS2__MODULE_EXPORT __declspec(dllexport)
+#       define MODULUS2__MODULE_EXPORT __declspec(dllexport)
 #   else
-#       define PFS_MODULUS2__MODULE_EXPORT
+#       define MODULUS2__MODULE_EXPORT
 #   endif
-#endif // !PFS_MODULUS2__MODULE_EXPORT
+#endif // !MODULUS2__MODULE_EXPORT

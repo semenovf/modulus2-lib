@@ -9,13 +9,12 @@
 #pragma once
 #include "pfs/emitter.hpp"
 
-namespace pfs {
 namespace modulus {
 
 class quit_plugin
 {
 public:
-    using emitter_type = emitter_mt<>;
+    using emitter_type = pfs::emitter_mt<>;
 
 public:
     emitter_type quit;
@@ -29,4 +28,4 @@ public:
     quit_plugin & operator = (quit_plugin &&) = delete;
 };
 
-}} // namespace pfs::modulus
+} // namespace modulus

@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-namespace pfs {
 namespace modulus {
 
 class in_memory_settings_plugin: public abstract_settings_plugin
@@ -21,29 +20,30 @@ class in_memory_settings_plugin: public abstract_settings_plugin
     std::map<std::string, property> _s;
     mutable std::mutex _mtx;
 
-public:
-    using abstract_settings_plugin::set;
-    using abstract_settings_plugin::get;
-
-    void set (property::key_type const & key, property::value_type const & value) override
+protected:
+    void set (key_type const & key, property const & prop) override
     {
         std::lock_guard<std::mutex> lock{_mtx};
-        auto v = property{value};
-        _s[key] = std::move(v);
+        _s[key] = prop;
     }
 
-    property get (property::key_type const & key, property::value_type const & default_value) override
+    void set (key_type const & key, property && prop) override
     {
         std::lock_guard<std::mutex> lock{_mtx};
+        _s[key] = std::move(prop);
+    }
 
+public:
+    property get (key_type const & key) override
+    {
+        std::lock_guard<std::mutex> lock{_mtx};
         auto it = _s.find(key);
 
         if (it != _s.end())
             return it->second;
 
-        return property{default_value};
+        return property{nullptr};
     }
 };
 
-}} // namespace pfs::modulus
-
+} // namespace modulus

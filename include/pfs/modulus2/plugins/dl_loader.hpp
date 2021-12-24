@@ -16,15 +16,15 @@
 #   include <android/log.h>
 #endif
 
-namespace pfs {
 namespace modulus {
+
+namespace fs = pfs::filesystem;
 
 template <typename ModulusType>
 class dl_loader_plugin: public loader_plugin<ModulusType>
 {
     using base_type = loader_plugin<ModulusType>;
     using basic_module_type = typename base_type::basic_module_type;
-    using string_type = typename base_type::string_type;
     using module_pointer = typename base_type::module_pointer;
     using module_deleter = typename base_type::module_deleter;
     using basic_module_deleter = typename base_type::basic_module_deleter;
@@ -33,10 +33,10 @@ class dl_loader_plugin: public loader_plugin<ModulusType>
 
     struct dynamic_module_deleter : public basic_module_deleter
     {
-        std::shared_ptr<dynamic_library> dlptr;
+        std::shared_ptr<pfs::dynamic_library> dlptr;
         module_dtor_t dtor {nullptr};
 
-        dynamic_module_deleter (std::shared_ptr<dynamic_library> p, module_dtor_t d)
+        dynamic_module_deleter (std::shared_ptr<pfs::dynamic_library> p, module_dtor_t d)
             : dlptr(p)
             , dtor(d)
         {}
@@ -49,14 +49,14 @@ class dl_loader_plugin: public loader_plugin<ModulusType>
     };
 
 public:
-    module_pointer load_module_for_path (string_type const & path
-        , std::list<string_type> const & search_dirs) override
+    module_pointer load_module_for_path (std::string const & path
+        , std::list<std::string> const & search_dirs) override
     {
         return module_for_path(path, search_dirs.begin(), search_dirs.end());
     }
 
-    module_pointer load_module_for_name (string_type const & basename
-        , std::list<string_type> const & search_dirs) override
+    module_pointer load_module_for_name (std::string const & basename
+        , std::list<std::string> const & search_dirs) override
     {
 
         return module_for_name(basename, search_dirs.begin(), search_dirs.end());
@@ -71,7 +71,7 @@ private:
         static char const * module_ctor_name = "__module_ctor__";
         static char const * module_dtor_name = "__module_dtor__";
 
-        auto dylib_ptr = std::make_shared<dynamic_library>();
+        auto dylib_ptr = std::make_shared<pfs::dynamic_library>();
         std::error_code ec;
 
         fs::path orig_path(path);
@@ -123,29 +123,29 @@ private:
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        dynamic_library::symbol_type ctor = dylib_ptr->resolve(module_ctor_name, ec);
+        pfs::dynamic_library::symbol_type ctor = dylib_ptr->resolve(module_ctor_name, ec);
 
         if (!ctor) {
-            this->log_error(fmt::format("{}: failed to resolve constructor `{}' for module: {}"
+            this->failure(fmt::format("{}: failed to resolve constructor `{}' for module: {}"
                 , dylib_path.native()
-                , string_type(module_ctor_name)
+                , std::string(module_ctor_name)
                 , ec.message()));
 
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
+        pfs::dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
 
         if (!dtor) {
-            this->log_error(fmt::format("{}: failed to resolve `dtor' for module: {}"
+            this->failure(fmt::format("{}: failed to resolve `dtor' for module: {}"
                 , dylib_path.native()
                 , ec.message()));
 
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        module_ctor_t module_ctor = void_func_ptr_cast<module_ctor_t>(ctor);
-        module_dtor_t module_dtor = void_func_ptr_cast<module_dtor_t>(dtor);
+        module_ctor_t module_ctor = pfs::void_func_ptr_cast<module_ctor_t>(ctor);
+        module_dtor_t module_dtor = pfs::void_func_ptr_cast<module_dtor_t>(dtor);
 
         decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = module_ctor();
 
@@ -157,13 +157,12 @@ private:
     }
 
     template <typename ForwardPathIt>
-    module_pointer module_for_name (string_type const & basename
+    module_pointer module_for_name (std::string const & basename
         , ForwardPathIt first, ForwardPathIt last)
     {
-        auto dl_filename = fs::path::string_type(basename);
-        auto modpath = dynamic_library::build_dl_filename(dl_filename);
+        auto modpath = pfs::dynamic_library::build_filename(PFS_UTF8_DECODE_PATH(basename));
         return module_for_path<ForwardPathIt>(modpath, first, last);
     }
 };
 
-}} // namespace pfs::modulus
+} // namespace modulus

@@ -12,7 +12,6 @@
 #include <memory>
 #include <thread>
 
-namespace pfs {
 namespace modulus {
 
 class timer_quit_plugin : public quit_plugin
@@ -64,4 +63,4 @@ public:
     }
 };
 
-}} // namespace pfs::modulus
+} // namespace modulus

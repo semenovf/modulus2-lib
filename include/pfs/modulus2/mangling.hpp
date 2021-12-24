@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-namespace pfs {
 namespace modulus {
 
 inline std::string const_prefix () { return std::string{"C"}; }
@@ -193,4 +192,4 @@ inline result_of_matching match_mangled_signatures (
     return result;
 }
 
-}} // namespace pfs::modulus
+} // namespace modulus

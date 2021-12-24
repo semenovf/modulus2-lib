@@ -14,18 +14,18 @@
 #include <thread>
 #include <iostream>
 
-using modulus2_type = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
-using namespace pfs::modulus;
+using modulus2_t = modulus::modulus2<modulus::iostream_logger>;
 
 int main ()
 {
-    using exit_status = modulus2_type::exit_status;
+    using exit_status = modulus2_t::exit_status;
 
     int timeout = 5; // seconds
-    iostream_logger logger;
-    modulus2_type::dispatcher d{logger};
-    timer_quit_plugin timer_quit_plugin {timeout};
-    posix_quit_plugin posix_quit_plugin;
+    modulus::iostream_logger logger;
+    modulus::timer_quit_plugin timer_quit_plugin {timeout};
+    modulus::posix_quit_plugin posix_quit_plugin;
+
+    modulus2_t::dispatcher d{logger};
 
     d.attach_plugin(timer_quit_plugin);
     d.attach_plugin(posix_quit_plugin);

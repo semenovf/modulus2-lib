@@ -17,7 +17,6 @@
 #   include <csignal>
 #endif
 
-namespace pfs {
 namespace modulus {
 
 enum  {
@@ -121,4 +120,4 @@ public:
 
 posix_quit_plugin * posix_quit_plugin::_instance {nullptr};
 
-}} // namespace pfs::modulus
+} // namespace modulus

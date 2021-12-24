@@ -7,8 +7,8 @@
 ################################################################################
 cmake_minimum_required (VERSION 3.5)
 
-if (NOT PFS_MODULUS2__SPDLOG_ROOT)
-    set(PFS_MODULUS2__SPDLOG_ROOT ${CMAKE_CURRENT_LIST_DIR}/3rdparty/spdlog)
+if (NOT MODULUS2__SPDLOG_ROOT)
+    set(MODULUS2__SPDLOG_ROOT ${CMAKE_CURRENT_LIST_DIR}/3rdparty/spdlog)
 endif()
 
-add_subdirectory(${PFS_MODULUS2__SPDLOG_ROOT} spdlog)
+add_subdirectory(${MODULUS2__SPDLOG_ROOT} spdlog)

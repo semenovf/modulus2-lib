@@ -11,7 +11,6 @@
 #pragma once
 #include <iostream>
 
-namespace pfs {
 namespace modulus {
 
 class iostream_logger
@@ -67,4 +66,4 @@ public:
     }
 };
 
-}} // namespace pfs::modulus
+} // namespace modulus
