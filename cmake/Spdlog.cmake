@@ -12,3 +12,8 @@ if (NOT MODULUS2__SPDLOG_ROOT)
 endif()
 
 add_subdirectory(${MODULUS2__SPDLOG_ROOT} spdlog)
+
+if (CMAKE_COMPILER_IS_GNUCXX)
+    # For link custom shared libraries with spdlog static library
+    target_compile_options(spdlog PRIVATE "-fPIC")
+endif()

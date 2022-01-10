@@ -13,8 +13,8 @@
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
 
-using modulus2_type = pfs::modulus::modulus2<pfs::modulus::iostream_logger>;
-using namespace pfs::modulus;
+using modulus2_type = modulus::modulus2<modulus::iostream_logger>;
+using namespace modulus;
 
 class custom_module_lifetime_plugin: public module_lifetime_plugin
 {

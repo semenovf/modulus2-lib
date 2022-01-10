@@ -74,7 +74,7 @@ public:
 
         // TODO Need error handling
         if (err)
-            return property{nullptr};
+            return nullptr;
 
         pfs::visit(property_setter{& result}, val);
 

@@ -21,7 +21,14 @@ endif()
 if (NOT TARGET pfs::debby)
     if (MODULUS2__ENABLE_ROCKSDB)
         set(DEBBY__ENABLE_ROCKSDB ON CACHE INTERNAL "")
-        set(DEBBY__ROCKSDB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rocksdb" CACHE INTERNAL "")
+
+        if (NOT DEBBY__ROCKSDB_ROOT)
+            if (NOT MODULUS2__ROCKSDB_ROOT)
+                set(MODULUS2__ROCKSDB_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rocksdb" CACHE INTERNAL "")
+            endif()
+            set(DEBBY__ROCKSDB_ROOT ${MODULUS2__ROCKSDB_ROOT} CACHE INTERNAL "")
+        endif()
+
         portable_target(INCLUDE_PROJECT
             ${CMAKE_CURRENT_LIST_DIR}/3rdparty/pfs/debby/library.cmake)
         endif()

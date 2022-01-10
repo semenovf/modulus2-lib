@@ -71,8 +71,8 @@ private:
         static char const * module_ctor_name = "__module_ctor__";
         static char const * module_dtor_name = "__module_dtor__";
 
-        auto dylib_ptr = std::make_shared<pfs::dynamic_library>();
-        std::error_code ec;
+        //auto dylib_ptr = std::make_shared<pfs::dynamic_library>();
+        //std::error_code ec;
 
         fs::path orig_path(path);
         fs::path dylib_path(path);
@@ -95,72 +95,68 @@ private:
 #if ANDROID
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "module not found: %s\n", dylib_path.c_str());
-#elif _MSC_VER && defined(_UNICODE)
-            fprintf(stderr, "module not found: %ws\n", dylib_path.c_str());
 #else
-            fprintf(stderr, "module not found: %s\n", dylib_path.c_str());
+            fmt::print(stderr, "module not found: {}\n", fs::utf8_encode(dylib_path));
 #endif
 
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        if (!dylib_ptr->open(dylib_path, ec)) {
+        pfs::error err;
+        auto dylib_ptr = std::make_shared<pfs::dynamic_library>(dylib_path, & err);
+
+        if (!*dylib_ptr) {
             // This is a critical section, so log output must not depends on logger
 #if ANDROID
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "open module failed: %s: %s\n"
                 , dylib_path.c_str()
-                , dylib_ptr->native_error().c_str());
-#elif _MSC_VER && defined(_UNICODE)
-            fprintf(stderr, "open module failed: %ws: %s\n"
-                , dylib_path.c_str()
-                , dylib_ptr->native_error().c_str());
+                , err.what().c_str());
 #else
-            fprintf(stderr, "open module failed: %s: %s\n"
-                , dylib_path.c_str()
-                , dylib_ptr->native_error().c_str());
+            fmt::print(stderr, "open module failed: {}: {}\n"
+                , fs::utf8_encode(dylib_path)
+                , err.what());
 #endif
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        pfs::dynamic_library::symbol_type ctor = dylib_ptr->resolve(module_ctor_name, ec);
+        auto module_ctor = dylib_ptr->resolve<module_ctor_t>(module_ctor_name, & err);
 
-        if (!ctor) {
+        if (err) {
             this->failure(fmt::format("{}: failed to resolve constructor `{}' for module: {}"
-                , dylib_path.native()
+                , fs::utf8_encode(dylib_path)
                 , std::string(module_ctor_name)
-                , ec.message()));
+                , err.what()));
 
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        pfs::dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
+        //pfs::dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
+        auto module_dtor = dylib_ptr->resolve<module_dtor_t>(module_dtor_name, & err);
 
-        if (!dtor) {
-            this->failure(fmt::format("{}: failed to resolve `dtor' for module: {}"
-                , dylib_path.native()
-                , ec.message()));
+        if (err) {
+            this->failure(fmt::format("{}: failed to resolve destructor `{}' for module: {}"
+                , fs::utf8_encode(dylib_path)
+                , std::string(module_dtor_name)
+                , err.what()));
 
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        module_ctor_t module_ctor = pfs::void_func_ptr_cast<module_ctor_t>(ctor);
-        module_dtor_t module_dtor = pfs::void_func_ptr_cast<module_dtor_t>(dtor);
-
-        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = module_ctor();
+        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = (*module_ctor)();
 
         if (!ptr)
             return module_pointer{nullptr, module_deleter{}};
 
         return module_pointer{ptr
-            , module_deleter{new dynamic_module_deleter{dylib_ptr, module_dtor}}};
+            , module_deleter{new dynamic_module_deleter{dylib_ptr, *module_dtor}}};
     }
 
     template <typename ForwardPathIt>
     module_pointer module_for_name (std::string const & basename
         , ForwardPathIt first, ForwardPathIt last)
     {
-        auto modpath = pfs::dynamic_library::build_filename(PFS_UTF8_DECODE_PATH(basename));
+        auto modpath = pfs::dynamic_library::build_filename(basename);
         return module_for_path<ForwardPathIt>(modpath, first, last);
     }
 };

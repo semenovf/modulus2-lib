@@ -12,7 +12,7 @@
 #include "doctest.h"
 #include "pfs/modulus2/mangling.hpp"
 
-using namespace pfs::modulus;
+using namespace modulus;
 
 template <typename T>
 void check_primitives_mangling (char c)
