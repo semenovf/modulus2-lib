@@ -6,6 +6,6 @@
 # Changelog:
 #      2021.06.18 Initial version.
 ################################################################################
-# add_subdirectory(quit_plugin)
-# add_subdirectory(loader_plugin)
-# add_subdirectory(spdlog_logger)
+add_subdirectory(quit_plugin)
+add_subdirectory(loader_plugin)
+add_subdirectory(spdlog_logger)

@@ -28,15 +28,13 @@ class dl_loader_plugin: public loader_plugin<ModulusType>
     using module_pointer = typename base_type::module_pointer;
     using module_deleter = typename base_type::module_deleter;
     using basic_module_deleter = typename base_type::basic_module_deleter;
-    using module_ctor_t = basic_module_type * (*)(void);
-    using module_dtor_t = void (*)(basic_module_type *);
 
     struct dynamic_module_deleter : public basic_module_deleter
     {
         std::shared_ptr<pfs::dynamic_library> dlptr;
-        module_dtor_t dtor {nullptr};
+        std::function<void(basic_module_type*)> dtor;
 
-        dynamic_module_deleter (std::shared_ptr<pfs::dynamic_library> p, module_dtor_t d)
+        dynamic_module_deleter (std::shared_ptr<pfs::dynamic_library> p, std::function<void(basic_module_type*)> d)
             : dlptr(p)
             , dtor(d)
         {}
@@ -120,7 +118,7 @@ private:
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        auto module_ctor = dylib_ptr->resolve<module_ctor_t>(module_ctor_name, & err);
+        auto module_ctor = dylib_ptr->resolve<basic_module_type*(void)>(module_ctor_name, & err);
 
         if (err) {
             this->failure(fmt::format("{}: failed to resolve constructor `{}' for module: {}"
@@ -132,7 +130,7 @@ private:
         }
 
         //pfs::dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
-        auto module_dtor = dylib_ptr->resolve<module_dtor_t>(module_dtor_name, & err);
+        auto module_dtor = dylib_ptr->resolve<void(basic_module_type*)>(module_dtor_name, & err);
 
         if (err) {
             this->failure(fmt::format("{}: failed to resolve destructor `{}' for module: {}"
@@ -143,13 +141,13 @@ private:
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = (*module_ctor)();
+        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = module_ctor();
 
         if (!ptr)
             return module_pointer{nullptr, module_deleter{}};
 
         return module_pointer{ptr
-            , module_deleter{new dynamic_module_deleter{dylib_ptr, *module_dtor}}};
+            , module_deleter{new dynamic_module_deleter{dylib_ptr, module_dtor}}};
     }
 
     template <typename ForwardPathIt>

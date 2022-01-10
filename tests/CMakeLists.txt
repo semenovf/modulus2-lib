@@ -11,8 +11,8 @@ project(modulus2-lib-TESTS CXX C)
 
 
 list(APPEND TESTS
-#     modulus2
-#     mangling
+    modulus2
+    mangling
     settings_plugin)
 
 foreach (t ${TESTS})
