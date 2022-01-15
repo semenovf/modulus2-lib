@@ -284,6 +284,11 @@ struct modulus2
         {
             return true;
         }
+
+        // NOTE! This method call is direct for all types of modules, so
+        // thread-safety needs to be considered while reimplemening this method.
+        virtual void on_about_quit ()
+        {}
     }; // basic_module
 
     using module_pointer = std::unique_ptr<basic_module, module_deleter>;
@@ -300,8 +305,6 @@ struct modulus2
         string_type        _parent_name;
         emitter_cache_type _emitter_cache;
 
-        // FIXME
-//         std::shared_ptr<dynamic_library> pdl;
     public:
         using map_type = std::map<string_type, module_context>;
 
@@ -736,6 +739,11 @@ struct modulus2
 
         void quit ()
         {
+            for (auto & ctx: _module_specs) {
+                basic_module * m = ctx.second.module();
+                m->on_about_quit();
+            }
+
             _quit_flag.store(1);
         }
 
