@@ -47,14 +47,14 @@ class dl_loader_plugin: public loader_plugin<ModulusType>
     };
 
 public:
-    module_pointer load_module_for_path (std::string const & path
-        , std::list<std::string> const & search_dirs) override
+    module_pointer load_module_for_path (fs::path const & path
+        , std::list<fs::path> const & search_dirs) override
     {
         return module_for_path(path, search_dirs.begin(), search_dirs.end());
     }
 
     module_pointer load_module_for_name (std::string const & basename
-        , std::list<std::string> const & search_dirs) override
+        , std::list<fs::path> const & search_dirs) override
     {
 
         return module_for_name(basename, search_dirs.begin(), search_dirs.end());
@@ -63,7 +63,7 @@ public:
 private:
 
     template <typename ForwardPathIt>
-    module_pointer module_for_path (std::string const & path
+    module_pointer module_for_path (fs::path const & path
         , ForwardPathIt first, ForwardPathIt last)
     {
         static char const * module_ctor_name = "__module_ctor__";
@@ -77,7 +77,7 @@ private:
 
         if (orig_path.is_relative()) {
             if (first == last) {
-                dylib_path = fs::path(".") / orig_path;
+                dylib_path = fs::current_path() / orig_path;
             } else {
                 while (first != last) {
                     if (fs::exists(*first / orig_path)) {

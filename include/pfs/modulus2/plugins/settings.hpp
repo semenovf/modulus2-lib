@@ -129,7 +129,7 @@ protected:
     virtual void set (key_type const & key, property && value) = 0;
 
 public:
-    virtual property get (key_type const & key) = 0;
+    virtual property get (key_type const & key) const = 0;
 
 public:
     virtual ~abstract_settings_plugin () {}
@@ -137,7 +137,7 @@ public:
     // For signed integral but not bool
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value, void>::type
-    set (key_type const & key, T && value)
+    set (key_type const & key, T value)
     {
         set(key, property{static_cast<std::intmax_t>(value)});
     }
@@ -145,7 +145,7 @@ public:
     // For floating point
     template <typename T>
     typename std::enable_if<std::is_floating_point<T>::value, void>::type
-    set (key_type const & key, T && value)
+    set (key_type const & key, T value)
     {
         set(key, property{static_cast<double>(value)});
     }
@@ -178,7 +178,7 @@ protected:
     void set (key_type const & /*key*/, property && /*value*/) override {}
 
 public:
-    property get (key_type const & /*key*/) override
+    property get (key_type const & /*key*/) const override
     {
         return property{nullptr};
     }

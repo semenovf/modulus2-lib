@@ -65,7 +65,7 @@ protected:
     }
 
 public:
-    property get (key_type const & key) override
+    property get (key_type const & key) const override
     {
         property result;
         debby::error err;

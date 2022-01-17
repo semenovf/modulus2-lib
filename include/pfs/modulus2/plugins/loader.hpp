@@ -1,16 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2021 Vladislav Trifochkin
+// Copyright (c) 2019-2022 Vladislav Trifochkin
 //
-// This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+// This file is part of `modulus2-lib`.
 //
 // Changelog:
 //      2021.07.10 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "pfs/emitter.hpp"
+#include "pfs/filesystem.hpp"
 #include <string>
 
 namespace modulus {
+
+namespace fs = pfs::filesystem;
 
 template <typename ModulusType>
 class loader_plugin
@@ -25,10 +28,10 @@ public:
     pfs::emitter_mt<std::string const &> failure;
 
 public:
-    virtual module_pointer load_module_for_path (std::string const & path
-        , std::list<std::string> const & search_dirs) = 0;
+    virtual module_pointer load_module_for_path (fs::path const & path
+        , std::list<fs::path> const & search_dirs) = 0;
     virtual module_pointer load_module_for_name (std::string const & name
-        , std::list<std::string> const & search_dirs) = 0;
+        , std::list<fs::path> const & search_dirs) = 0;
 
 public:
     loader_plugin () = default;

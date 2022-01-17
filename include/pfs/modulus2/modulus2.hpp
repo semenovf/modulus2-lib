@@ -12,6 +12,7 @@
 #include "pfs/modulus2/plugins/quit.hpp"
 #include "pfs/modulus2/plugins/settings.hpp"
 #include "pfs/emitter.hpp"
+#include "pfs/filesystem.hpp"
 #include "pfs/fmt.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/memory.hpp"
@@ -908,7 +909,7 @@ struct modulus2
          */
         bool register_module_for_name (module_name_type const & name
             , string_type const & basename
-            , std::list<string_type> const & search_dirs = std::list<string_type>{})
+            , std::list<fs::path> const & search_dirs = std::list<fs::path>{})
         {
             bool found = false;
             bool success = false;
