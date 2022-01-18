@@ -82,9 +82,8 @@ public:
     }
 
 public:
-    rocksdb_settings_plugin (pfs::filesystem::path const & db_path
-        , bool create_if_missing = true)
-        : _db(db_path, create_if_missing)
+    rocksdb_settings_plugin (pfs::filesystem::path const & db_path)
+        : _db(db_path)
     {}
 };
 
