@@ -268,6 +268,11 @@ struct modulus2
             _dispatcher_ptr->log_error(this, s);
         }
 
+        auto settings () -> decltype(this->_dispatcher_ptr->settings())
+        {
+            return this->get_dispatcher().settings();
+        }
+
     protected:
         /**
          * Module's on_start() method called after loading and connection
