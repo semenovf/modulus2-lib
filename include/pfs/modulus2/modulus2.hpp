@@ -741,7 +741,9 @@ struct modulus2
         }
 
         virtual ~dispatcher ()
-        {}
+        {
+            unregister_all();
+        }
 
         void quit ()
         {
