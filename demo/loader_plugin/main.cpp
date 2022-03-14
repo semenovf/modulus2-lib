@@ -26,7 +26,7 @@ int main ()
     d.attach_plugin(posix_quit_plugin);
     d.attach_plugin(dl_loader_plugin);
 
-    std::list<std::string> search_paths;
+    std::list<pfs::filesystem::path> search_paths;
 
 #if defined(_MSC_VER)
     d.register_module_for_path(std::make_pair("m1", ""), "m1.dll", search_paths);

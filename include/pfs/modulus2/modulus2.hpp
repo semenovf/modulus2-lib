@@ -887,7 +887,7 @@ struct modulus2
          */
         bool register_module_for_path (module_name_type const & name
             , string_type const & path
-            , std::list<string_type> const & search_dirs = std::list<string_type>{})
+            , std::list<fs::path> const & search_dirs = std::list<fs::path>{})
         {
             bool found = false;
             bool success = false;

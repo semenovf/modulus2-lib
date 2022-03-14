@@ -1,14 +1,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2019-2021 Vladislav Trifochkin
 //
-// This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+// This file is part of `modulus2-lib`.
 //
 // Changelog:
 //      2021.08.22 Initial version.
+//      2022.03.14 Refactored.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "pfs/emitter.hpp"
-#include "pfs/string_view.hpp"
 #include "pfs/type_traits.hpp"
 #include "pfs/variant.hpp"
 #include <functional>
@@ -18,103 +18,12 @@
 
 namespace modulus {
 
-using blob_t  = std::vector<std::uint8_t>;
-using basic_property_t = pfs::variant<
+using property = pfs::variant<
       std::nullptr_t
+    , bool
     , std::intmax_t
     , double
-    , blob_t        // bytes sequence
-    , std::string>; // utf-8 encoded string
-
-struct property: public basic_property_t
-{
-    using basic_property_t::basic_property_t;
-
-    template <typename T>
-    typename std::enable_if<std::is_same<T, std::nullptr_t>::value, bool>::type
-    is () const noexcept
-    {
-        return pfs::holds_alternative<std::nullptr_t>(*this);
-    }
-
-    template <typename T>
-    typename std::enable_if<std::is_integral<T>::value, bool>::type
-    is () const noexcept
-    {
-        return pfs::holds_alternative<std::intmax_t>(*this);
-    }
-
-    template <typename T>
-    typename std::enable_if<std::is_floating_point<T>::value, bool>::type
-    is () const noexcept
-    {
-        return pfs::holds_alternative<double>(*this);
-    }
-
-    template <typename T>
-    typename std::enable_if<std::is_same<T, std::string>::value, bool>::type
-    is () const noexcept
-    {
-        return pfs::holds_alternative<std::string>(*this);
-    }
-
-    template <typename T>
-    typename std::enable_if<std::is_same<T, blob_t>::value, bool>::type
-    is () const noexcept
-    {
-        return pfs::holds_alternative<blob_t>(*this);
-    }
-
-    template <typename T>
-    T or_default_warn (T && default_value
-        , std::string const & warn_msg
-        , std::function<void(std::string const &)> warn_callback)
-    {
-        if (!is<T>())
-            warn_callback(warn_msg);
-
-        return or_default(std::forward<T>(default_value));
-    }
-
-    template <typename T>
-    typename std::enable_if<std::is_integral<T>::value, T>::type
-    or_default (T && default_value)
-    {
-        auto p = pfs::get_if<std::intmax_t>(this);
-        return p ? static_cast<T>(*p) : default_value;
-    }
-
-    template <typename T>
-    typename std::enable_if<(std::is_floating_point<T>::value), double>::type
-    or_default (T && default_value)
-    {
-        auto p = pfs::get_if<double>(this);
-        return p ? static_cast<T>(*p) : default_value;
-    }
-
-    template <typename T>
-    typename std::enable_if<(std::is_same<std::string, pfs::remove_cvref_t<T>>::value), std::string>::type
-    or_default (T && default_value)
-    {
-        auto p = pfs::get_if<std::string>(this);
-        return p ? *p : default_value;
-    }
-
-    // For string_view
-    template <typename T>
-    typename std::enable_if<(std::is_same<pfs::string_view, pfs::remove_cvref_t<T>>::value), std::string>::type
-    or_default (T && default_value)
-    {
-        auto p = pfs::get_if<std::string>(this);
-        return p ? *p : default_value.to_string();
-    }
-
-    std::string or_default (char const * default_value)
-    {
-        auto p = pfs::get_if<std::string>(this);
-        return p ? *p : std::string{default_value};
-    }
-};
+    , std::string>;
 
 class abstract_settings_plugin
 {
@@ -122,66 +31,94 @@ public:
     using key_type = std::string;
 
 public:
-    pfs::emitter_mt<std::string const &> failure;
+    mutable pfs::emitter_mt<std::string const &> failure;
 
 protected:
-    virtual void set (key_type const & key, property const & value) = 0;
-    virtual void set (key_type const & key, property && value) = 0;
+    virtual property get_property (key_type const & key
+        , property const & default_value = property{nullptr}) const = 0;
 
-public:
-    virtual property get (key_type const & key) const = 0;
+    virtual void set_property (key_type const & key, property const & value) = 0;
 
 public:
     virtual ~abstract_settings_plugin () {}
 
-    // For signed integral but not bool
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value, void>::type
+    typename std::enable_if<std::is_same<T, bool>::value, void>::type
     set (key_type const & key, T value)
     {
-        set(key, property{static_cast<std::intmax_t>(value)});
+        this->set_property(key, property{value});
     }
 
-    // For floating point
+    template <typename T>
+    typename std::enable_if<std::is_integral<T>::value
+        && !std::is_same<T, bool>::value, void>::type
+    set (key_type const & key, T value)
+    {
+        this->set_property(key, property{static_cast<std::intmax_t>(value)});
+    }
+
     template <typename T>
     typename std::enable_if<std::is_floating_point<T>::value, void>::type
     set (key_type const & key, T value)
     {
-        set(key, property{static_cast<double>(value)});
+        this->set_property(key, property{static_cast<double>(value)});
     }
 
     void set (key_type const & key, std::string const & value)
     {
-        set(key, property{value});
+        this->set_property(key, property{value});
     }
 
-    void set (key_type const & key, pfs::string_view value)
+    void set (key_type const & key, char const * value, std::size_t len)
     {
-        set(key, property{value.to_string()});
+        this->set_property(key, property{std::string(value, len)});
     }
 
-    void set (key_type const & key, char const * value)
+    template <typename T>
+    typename std::enable_if<std::is_same<T, bool>::value, bool>::type
+    get (key_type const & key, bool default_value = false)
     {
-        set(key, property{std::string{value}});
+        auto prop = get_property(key, property{default_value});
+        return pfs::get<bool>(prop);
     }
 
-    property operator [] (key_type const & key)
+    template <typename T>
+    typename std::enable_if<std::is_integral<T>::value
+        && !std::is_same<T, bool>::value, T>::type
+    get (key_type const & key, T default_value = 0)
     {
-        return get(key);
+        auto prop = get_property(key, property{static_cast<std::intmax_t>(default_value)});
+        return static_cast<T>(pfs::get<std::intmax_t>(prop));
+    }
+
+    template <typename T>
+    typename std::enable_if<std::is_floating_point<T>::value
+        && !std::is_same<T, bool>::value, T>::type
+    get (key_type const & key, T default_value = 0)
+    {
+        auto prop = get_property(key, property{static_cast<double>(default_value)});
+        return static_cast<T>(pfs::get<double>(prop));
+    }
+
+    template <typename T>
+    typename std::enable_if<std::is_same<T, std::string>::value, T>::type
+    get (key_type const & key, std::string const & default_value = std::string{})
+    {
+        auto prop = get_property(key, property{static_cast<std::string>(default_value)});
+        return static_cast<T>(pfs::get<std::string>(prop));
     }
 };
 
 class null_settings_plugin: public abstract_settings_plugin
 {
 protected:
-    void set (key_type const & /*key*/, property const & /*value*/) override {}
-    void set (key_type const & /*key*/, property && /*value*/) override {}
-
-public:
-    property get (key_type const & /*key*/) const override
+    property get_property (key_type const & /*key*/
+        , property const & default_value /*= property{nullptr}*/) const override
     {
-        return property{nullptr};
+        return default_value;
     }
+
+    void set_property (key_type const & /*key*/, property const & /*value*/) override {}
 };
 
 } // namespace modulus

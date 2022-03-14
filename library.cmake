@@ -10,8 +10,14 @@
 cmake_minimum_required (VERSION 3.11)
 project(modulus2-lib CXX C)
 
+option(MODULUS2__ENABLE_EXCEPTIONS "Enable exceptions for library" ON)
 option(MODULUS2__ENABLE_SPDLOG "Enable `spdlog` library for logger" OFF)
 option(MODULUS2__ENABLE_ROCKSDB "Enable `RocksDb` library as backend for settings" OFF)
+
+if (MODULUS2__ENABLE_EXCEPTIONS)
+    set(PFS__ENABLE_EXCEPTIONS ON CACHE INTERNAL "")
+    set(DEBBY__ENABLE_EXCEPTIONS ON CACHE INTERNAL "")
+endif()
 
 if (NOT TARGET pfs::common)
     portable_target(INCLUDE_PROJECT

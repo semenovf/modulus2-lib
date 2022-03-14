@@ -1,10 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2021 Vladislav Trifochkin
+// Copyright (c) 2019-2022 Vladislav Trifochkin
 //
-// This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+// This file is part of `modulus2-lib`.
 //
 // Changelog:
 //      2021.08.22 Initial version.
+//      2022.03.14 Refactored.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "settings.hpp"
@@ -21,20 +22,7 @@ class in_memory_settings_plugin: public abstract_settings_plugin
     mutable std::mutex _mtx;
 
 protected:
-    void set (key_type const & key, property const & prop) override
-    {
-        std::lock_guard<std::mutex> lock{_mtx};
-        _s[key] = prop;
-    }
-
-    void set (key_type const & key, property && prop) override
-    {
-        std::lock_guard<std::mutex> lock{_mtx};
-        _s[key] = std::move(prop);
-    }
-
-public:
-    property get (key_type const & key) override
+    property get_property (key_type const & key, property const & default_value) const override
     {
         std::lock_guard<std::mutex> lock{_mtx};
         auto it = _s.find(key);
@@ -42,7 +30,13 @@ public:
         if (it != _s.end())
             return it->second;
 
-        return property{nullptr};
+        return default_value;
+    }
+
+    void set_property (key_type const & key, property const & value) override
+    {
+        std::lock_guard<std::mutex> lock{_mtx};
+        _s[key] = value;
     }
 };
 

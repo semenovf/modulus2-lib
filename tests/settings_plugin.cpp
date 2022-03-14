@@ -32,55 +32,23 @@ private:
     {
         auto & s = get_dispatcher().settings();
 
-        CHECK(s.get("value.bool")        .is<bool>());
-        CHECK(s.get("value.char")        .is<std::intmax_t>());
-        CHECK(s.get("value.int8")        .is<std::intmax_t>());
-        CHECK(s.get("value.uint8")       .is<std::uintmax_t>());
-        CHECK(s.get("value.int16")       .is<std::intmax_t>());
-        CHECK(s.get("value.uint16")      .is<std::uintmax_t>());
-        CHECK(s.get("value.int32")       .is<std::intmax_t>());
-        CHECK(s.get("value.uint32")      .is<std::uintmax_t>());
-        CHECK(s.get("value.int64")       .is<std::intmax_t>());
-        CHECK(s.get("value.uint64")      .is<std::uintmax_t>());
-        CHECK(s.get("value.float")       .is<double>());
-        CHECK(s.get("value.double")      .is<double>());
-        CHECK(s.get("value.string.hello").is<std::string>());
-        CHECK(s.get("value.string.world").is<std::string>());
-        CHECK(s.get("value.string.!")    .is<std::string>());
+        CHECK_EQ(s.get<bool>("value.bool"), true);
+        CHECK_EQ(s.get<char>("value.char"), '\x42');
+        CHECK_EQ(s.get<std::int8_t>("value.int8"), std::numeric_limits<std::int8_t>::min());
+        CHECK_EQ(s.get<std::uint8_t>("value.uint8"), std::numeric_limits<std::uint8_t>::max());
+        CHECK_EQ(s.get<std::int16_t>("value.int16"), std::numeric_limits<std::int16_t>::min());
+        CHECK_EQ(s.get<std::uint16_t>("value.uint16"), std::numeric_limits<std::uint16_t>::max());
+        CHECK_EQ(s.get<std::int32_t>("value.int32"), std::numeric_limits<std::int32_t>::min());
+        CHECK_EQ(s.get<std::uint32_t>("value.uint32"), std::numeric_limits<std::uint32_t>::max());
+        CHECK_EQ(s.get<std::int64_t>("value.int64"), std::numeric_limits<std::int64_t>::min());
+        CHECK_EQ(s.get<std::uint64_t>("value.uint64"), std::numeric_limits<std::uint64_t>::max());
+        CHECK_EQ(s.get<float>("value.float"), std::numeric_limits<float>::max());
+        CHECK_EQ(s.get<double>("value.double"), std::numeric_limits<double>::max());
+        CHECK_EQ(s.get<std::string>("value.string.hello"), std::string{"Hello"});
+        CHECK_EQ(s.get<std::string>("value.string.world"), std::string{"World"});
+        CHECK_EQ(s.get<std::string>("value.string.!"), std::string{"!"});
 
-        CHECK_EQ(s.get("value.bool")        .or_default(false), true);
-        CHECK_EQ(s.get("value.char")        .or_default(0), '\x42');
-        CHECK_EQ(s.get("value.int8")        .or_default(0), std::numeric_limits<std::int8_t>::min());
-        CHECK_EQ(s.get("value.uint8")       .or_default(std::uint8_t{0}), std::numeric_limits<std::uint8_t>::max());
-        CHECK_EQ(s.get("value.int16")       .or_default(0), std::numeric_limits<std::int16_t>::min());
-        CHECK_EQ(s.get("value.uint16")      .or_default(std::uint16_t{0}), std::numeric_limits<std::uint16_t>::max());
-        CHECK_EQ(s.get("value.int32")       .or_default(0), std::numeric_limits<std::int32_t>::min());
-        CHECK_EQ(s.get("value.uint32")      .or_default(std::uint32_t{0}), std::numeric_limits<std::uint32_t>::max());
-        CHECK_EQ(s.get("value.int64")       .or_default(std::int64_t{0}), std::numeric_limits<std::int64_t>::min());
-        CHECK_EQ(s.get("value.uint64")      .or_default(std::uint64_t{0}), std::numeric_limits<std::uint64_t>::max());
-        CHECK_EQ(s.get("value.float")       .or_default(float{0.0f}), std::numeric_limits<float>::max());
-        CHECK_EQ(s.get("value.double")      .or_default(double{0.0f}), std::numeric_limits<double>::max());
-        CHECK_EQ(s.get("value.float")       .or_default(0.0f), std::numeric_limits<float>::max());
-        CHECK_EQ(s.get("value.double")      .or_default(double{0.0f}), std::numeric_limits<double>::max());
-        CHECK_EQ(s.get("value.string.hello").or_default("xxx"), std::string{"Hello"});
-        CHECK_EQ(s.get("value.string.world").or_default("xxx"), std::string{"World"});
-        CHECK_EQ(s.get("value.string.!")    .or_default("xxx"), std::string{"!"});
-
-        CHECK(s.get("value.not-set").is<std::nullptr_t>());
-        CHECK_EQ(s.get("value.not-set").or_default(true), true);
-        CHECK_EQ(s.get("value.int.not-set").or_default(42), 42);
-        CHECK_EQ(s.get("value.uint.not-set").or_default(std::uint8_t{42}), 42);
-
-        // Test `or_default_warn`
-        std::string not_set_sample {"NOT-SET"};
-        std::string not_set;
-        CHECK_EQ(s.get("value.not-set").or_default_warn(true
-            , not_set_sample
-            , [& not_set] (std::string const & msg) {
-                not_set = msg;
-            }), true);
-
-        REQUIRE_EQ(not_set, not_set_sample);
+        CHECK_EQ(s.get<std::string>("value.not-set", "not-set"), std::string{"not-set"});
 
         // No need to enter into dispatcher's loop
         return false;
@@ -107,7 +75,7 @@ void check (modulus::abstract_settings_plugin * s)
     s->set("value.double", std::numeric_limits<double>::max());
     s->set("value.string.hello", "Hello");
     s->set("value.string.world", std::string{"World"});
-    s->set("value.string.!", pfs::string_view{"!"});
+    s->set("value.string.!", "!");
 
     d.attach_plugin(*s);
 
