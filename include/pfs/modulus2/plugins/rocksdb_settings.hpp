@@ -69,7 +69,7 @@ protected:
         auto value = _db.fetch(key, & ok);
 
         if (!ok) {
-            this->failure(fmt::format("no property found by key: [{}]", key));
+            this->failure(fmt::format("no property found by key: [{}], used default", key));
             return default_value;
         }
 
