@@ -675,11 +675,18 @@ struct modulus2
                     assert(module_ptr);
 
                     if (!module_ptr->is_runnable()) {
-                        log_warn(fmt::format("Module [{}] must be runnable"
+                        log_error(fmt::format("Module [{}] must be runnable"
                             , module_ptr->name()));
                         r = exit_status::failure;
-                    } else if (!module_ptr->on_start()) {
-                        r = exit_status::failure;
+                    } else {
+                        if (!module_ptr->on_start()) {
+                            r = exit_status::failure;
+                            log_error(fmt::format("Module [{}] start failure"
+                                , module_ptr->name()));
+                        } else {
+                            log_trace(fmt::format("Module [{}] started successfully"
+                                , module_ptr->name()));
+                        }
                     }
                 }
             }
@@ -689,11 +696,20 @@ struct modulus2
                 for (auto & ctx: _module_specs) {
                     if (ctx.second.parent_name() == name) {
 
-                        assert(ctx.second.module());
+                        auto module_ptr = ctx.second.module();
 
-                        if (ctx.second.module()->is_guest()) {
-                            if (!ctx.second.module()->on_start())
+                        assert(module_ptr);
+
+                        if (module_ptr->is_guest()) {
+                            if (!module_ptr->on_start()) {
                                 r = exit_status::failure;
+                                log_error(fmt::format("Module [{}] start failure"
+                                    , module_ptr->name()));
+                                break;
+                            } else {
+                                log_trace(fmt::format("Module [{}] started successfully"
+                                    , module_ptr->name()));
+                            }
                         }
                     }
                 }
@@ -733,6 +749,8 @@ struct modulus2
                     // Force call of pending callbacks
                     module_ptr->runnable()->flush();
                 }
+            } else {
+                _quit_flag = true;
             }
 
             // Finalize children
@@ -1056,8 +1074,14 @@ struct modulus2
                     log_trace(fmt::format("Module [{}] is regular"
                         , module_ptr->name()));
 
-                    if (!module_ptr->on_start())
+                    if (!module_ptr->on_start()) {
                         r = exit_status::failure;
+                        log_error(fmt::format("Module [{}] start failure"
+                            , module_ptr->name()));
+                    } else {
+                            log_trace(fmt::format("Module [{}] started successfully"
+                                , module_ptr->name()));
+                    }
                 } else {
                     log_trace(fmt::format("Module [{}] is guest"
                         , module_ptr->name()));
