@@ -1,7 +1,7 @@
 ################################################################################
-# Copyright (c) 2021 Vladislav Trifochkin
+# Copyright (c) 2021,2022 Vladislav Trifochkin
 #
-# This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+# This file is part of `modulus2-lib`.
 #
 # Changelog:
 #      2021.07.10 Initial version.

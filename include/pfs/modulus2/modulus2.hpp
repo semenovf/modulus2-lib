@@ -1,7 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2021 Vladislav Trifochkin
+// Copyright (c) 2019-2022 Vladislav Trifochkin
 //
-// This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+// License: see LICENSE file
+//
+// This file is part of `modulus2-lib`.
 //
 // Changelog:
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
@@ -124,7 +126,6 @@ struct modulus2
         friend class module_context;
 
 //     public:
-//         using string_type = StringType;
 //         using emitter_mapper_pair = modulus::emitter_mapper_pair;
 //
 //         // MSVC do not want 'detector_mapper_pair' definition in upper level, so duplicate here
@@ -138,37 +139,7 @@ struct modulus2
     protected:
         string_type  _name;
         dispatcher * _dispatcher_ptr {nullptr};
-//         bool         _started = false;
 
-//         /**
-//          * Acquire timer with callback processed from module's queue.
-//          */
-//         timer_id acquire_timer (double delay
-//                 , double period
-//                 , typename timer_pool_type::callback_type && callback)
-//         {
-//             return _dispatcher_ptr->acquire_timer(this
-//                     , delay
-//                     , period
-//                     , std::forward<typename timer_pool_type::callback_type>(callback));
-//         }
-//
-//         /**
-//          * Acquire timer with callback processed from dispatcher queue
-//          */
-//         timer_id acquire_timer_dispatcher (double delay
-//                 , double period
-//                 , typename timer_pool_type::callback_type && callback)
-//         {
-//             return _dispatcher_ptr->acquire_timer(delay, period
-//                     , std::forward<typename timer_pool_type::callback_type>(callback));
-//         }
-//
-//         inline void destroy_timer (timer_id id)
-//         {
-//             _dispatcher_ptr->destroy_timer(id);
-//         }
-//
     protected:
         void set_dispatcher (dispatcher * pdisp) noexcept
         {
@@ -306,7 +277,7 @@ struct modulus2
     {
         using emitter_cache_type = std::map<api_id_type, basic_emitter_type *>;
 
-        dispatcher *       _dispather_ptr {nullptr};
+        dispatcher *       _dispatcher_ptr {nullptr};
         module_pointer     _module_ptr;
         string_type        _parent_name;
         emitter_cache_type _emitter_cache;
@@ -319,7 +290,7 @@ struct modulus2
             , string_type const & ename  // emitter owner name
             , string_type const & dname) // detector owner name
         {
-            _dispather_ptr->log_trace(fmt::format("\tEmitter [{}]"
+            _dispatcher_ptr->log_trace(fmt::format("\tEmitter [{}]"
                 " of module [{}]"
                 " connected with corresponding detector of module [{}]"
                 , id, ename, dname));
@@ -330,7 +301,7 @@ struct modulus2
                 , string_type const & name
                 , string_type const & parent_name
                 , module_pointer && m)
-            : _dispather_ptr(& d)
+            : _dispatcher_ptr(& d)
             , _module_ptr(std::move(m))
             , _parent_name(parent_name)
         {
@@ -338,7 +309,7 @@ struct modulus2
             _module_ptr->set_dispatcher(& d);
             _module_ptr->set_name(name);
 
-            _dispather_ptr->log_trace(fmt::format("Declare emitters for module: {}"
+            _dispatcher_ptr->log_trace(fmt::format("Declare emitters for module: {}"
                 , this->name()));
             _module_ptr->declare_emitters(*this);
         }
@@ -365,7 +336,7 @@ struct modulus2
         template <typename ...Args>
         void declare_emitter (api_id_type id, emitter_type<Args...> & em)
         {
-            _dispather_ptr->log_trace(fmt::format("\tCaching emitter [{}] for {}"
+            _dispatcher_ptr->log_trace(fmt::format("\tCaching emitter [{}] for {}"
                 , id, this->name()));
             _emitter_cache.emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
         }
@@ -403,7 +374,7 @@ struct modulus2
         void connect_emitters (typename map_type::iterator first
             , typename map_type::iterator last)
         {
-            _dispather_ptr->log_trace("Connecting emitters:");
+            _dispatcher_ptr->log_trace("Connecting emitters:");
 
             // Connecting emitters of this module with corresponding detectors
             // of modules in range [first; last) and with own detectors
@@ -442,7 +413,7 @@ struct modulus2
                 em.second->disconnect_all();
             }
 
-            _dispather_ptr->log_trace(fmt::format("emitters disconnected for [{}]"
+            _dispatcher_ptr->log_trace(fmt::format("emitters disconnected for [{}]"
                 , _module_ptr->name()));
         }
 
@@ -482,7 +453,7 @@ struct modulus2
         std::vector<loader_plugin<modulus2> *> _loaders;
 
     private:
-        function_queue_type              _q;
+        mutable function_queue_type      _q;
         std::unique_ptr<timer_pool_type> _timer_pool_ptr;
         module_context_map_type          _module_specs;
 
@@ -502,6 +473,76 @@ struct modulus2
         abstract_settings_plugin * _settings_plugin{nullptr};
 
     private:
+        struct timer_callback_helper
+        {
+            pfs::timer_pool::callback_type callback;
+            function_queue_type * callback_queue {nullptr};
+            pfs::timer_pool::timer_id timerid {0};
+
+            void operator () ()
+            {
+                if (callback_queue) {
+                    callback_queue->push(callback);
+                } else {
+                    callback();
+                }
+            }
+        };
+
+        /**
+         * Acquire periodic timer with callback processed from module's queue,
+         * or processed from dispatcher's queue or called directly otherwise.
+         * Do not need to destroy timer explicitly unless want to stop a timer.
+         */
+        inline pfs::timer_pool::timer_id start_periodic_timer (
+              function_queue_type * callback_queue
+            , std::chrono::milliseconds period
+            , typename timer_pool_type::callback_type && callback)
+        {
+            timer_callback_helper timer_callback;
+            timer_callback.callback_queue = callback_queue;
+            timer_callback.callback = std::move(callback);
+            timer_callback.timerid = _timer_pool_ptr->create(period
+                , period
+                , std::move(timer_callback));
+
+            return timer_callback.timerid;
+        }
+
+        /**
+         * Acquire single shot timer with callback processed from module's
+         * queue, or processed from dispatcher's queue or called directly
+         * otherwise.
+         * Do not need to destroy timer explicitly unless want to cancel a
+         * timeout that has not fired yet
+         */
+        inline pfs::timer_pool::timer_id start_timer (
+              function_queue_type * callback_queue
+            , std::chrono::milliseconds timeout
+            , typename timer_pool_type::callback_type && callback)
+        {
+            timer_callback_helper timer_callback;
+            timer_callback.callback_queue = callback_queue;
+            timer_callback.callback = std::move(callback);
+            timer_callback.timerid = _timer_pool_ptr->create(timeout
+                , std::move(timer_callback));
+
+            return timer_callback.timerid;
+        }
+
+        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        {
+            // _timer_pool_ptr may be already destroyed (i.e. on finalize())
+            if (_timer_pool_ptr)
+                _timer_pool_ptr->destroy(id);
+        }
+
+    private:
+        function_queue_type * queue () const
+        {
+            return & _q;
+        }
+
         // Logger backend for direct printing
         void direct_print (void (logger_type::*log)(string_type const &)
             , basic_module const * m
@@ -735,9 +776,6 @@ struct modulus2
             , _log_printer(& dispatcher::direct_print)
         {
             _settings_plugin = & _null_settings_plugin;
-
-//             // Initialize timer pool
-//             _ptimer_pool.reset(new timer_pool_type);
         }
 
         virtual ~dispatcher ()
@@ -1065,6 +1103,35 @@ struct modulus2
         {
             return nullptr;
         }
+
+    public:
+        /**
+         * Start periodic timer.
+         */
+        inline pfs::timer_pool::timer_id start_periodic_timer (
+              std::chrono::milliseconds period
+            , typename dispatcher::timer_pool_type::callback_type && callback)
+        {
+            // Run callback in dispatcher's queue.
+            return this->_dispatcher_ptr->start_periodic_timer(
+                  this->_dispatcher_ptr->queue()
+                , period
+                , std::move(callback));
+        }
+
+        /**
+         * Start single shot timer.
+         */
+        inline pfs::timer_pool::timer_id start_timer (
+              std::chrono::milliseconds timeout
+            , typename dispatcher::timer_pool_type::callback_type && callback)
+        {
+            // Run callback in dispatcher's queue.
+            return this->_dispatcher_ptr->start_timer(
+                  this->_dispatcher_ptr->queue()
+                , timeout
+                , std::move(callback));
+        }
     };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1099,6 +1166,29 @@ struct modulus2
         {
             _q.call_all();
         }
+
+    public:
+        /**
+         * Start periodic timer.
+         */
+        inline pfs::timer_pool::timer_id start_periodic_timer (
+              std::chrono::milliseconds period
+            , typename dispatcher::timer_pool_type::callback_type && callback)
+        {
+            return this->_dispatcher_ptr->start_periodic_timer(
+                this->queue(), period, std::move(callback));
+        }
+
+        /**
+         * Start single shot timer.
+         */
+        inline pfs::timer_pool::timer_id start_timer (
+              std::chrono::milliseconds timeout
+            , typename dispatcher::timer_pool_type::callback_type && callback)
+        {
+            return this->_dispatcher_ptr->start_timer(this->queue()
+                , timeout, std::move(callback));
+        }
     };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1125,6 +1215,29 @@ struct modulus2
         void set_parent_queue (function_queue_type * q)
         {
             _parent_queue = q;
+        }
+
+    public:
+        /**
+         * Start periodic timer.
+         */
+        inline pfs::timer_pool::timer_id start_periodic_timer (
+              std::chrono::milliseconds period
+            , typename dispatcher::timer_pool_type::callback_type && callback)
+        {
+            return this->_dispatcher_ptr->start_periodic_timer(
+                this->queue(), period, std::move(callback));
+        }
+
+        /**
+         * Start single shot timer.
+         */
+        inline pfs::timer_pool::timer_id start_timer (
+              std::chrono::milliseconds timeout
+            , typename dispatcher::timer_pool_type::callback_type && callback)
+        {
+            return this->_dispatcher_ptr->start_timer(this->queue()
+                , timeout, std::move(callback));
         }
     };
 };

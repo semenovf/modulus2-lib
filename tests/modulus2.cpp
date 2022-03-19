@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2021 Vladislav Trifochkin
+// Copyright (c) 2019-2022 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
-// This file is part of [modulus2-lib](https://github.com/semenovf/modulus2-lib) library.
+// This file is part of `modulus2-lib`.
 //
 // Changelog:
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
@@ -12,9 +12,12 @@
 #include "doctest.h"
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
+#include "pfs/modulus2/plugins/timer_quit.hpp"
 
 using modulus2_type = modulus::modulus2<modulus::iostream_logger>;
 using namespace modulus;
+
+std::atomic_int __timer_counter {0};
 
 class custom_module_lifetime_plugin: public module_lifetime_plugin
 {
@@ -86,6 +89,10 @@ private:
 
         emitData(std::move(d));
 
+        start_timer(std::chrono::milliseconds(100), [] {
+            __timer_counter++;
+        });
+
         return true;
     }
 
@@ -143,6 +150,11 @@ private:
     bool on_start () override
     {
         log_debug("on_start()");
+
+        start_timer(std::chrono::milliseconds(200), [] {
+            __timer_counter++;
+        });
+
         return true;
     }
 
@@ -246,6 +258,11 @@ private:
     bool on_start () override
     {
         log_debug("on_start()");
+
+        start_timer(std::chrono::milliseconds(300), [] {
+            __timer_counter++;
+        });
+
         return true;
     }
 
@@ -260,9 +277,7 @@ public:
 
     modulus2_type::exit_status run () override
     {
-        int i = 3;
-
-        while (! is_quit() && i--) {
+        while (! is_quit()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             call_all();
         }
@@ -284,6 +299,11 @@ private:
     bool on_start () override
     {
         log_debug("on_start()");
+
+        start_timer(std::chrono::milliseconds(400), [] {
+            __timer_counter++;
+        });
+
         return true;
     }
 
@@ -355,6 +375,11 @@ private:
     bool on_start () override
     {
         log_debug("on_start()");
+
+        start_timer(std::chrono::milliseconds(500), [] {
+            __timer_counter++;
+        });
+
         return true;
     }
 
@@ -410,6 +435,9 @@ TEST_CASE("Modulus2 basics") {
     iostream_logger logger;
     modulus2_type::dispatcher d{logger};
 
+    int timeout = 2; // seconds
+    timer_quit_plugin timer_quit_plugin {timeout};
+
     custom_module_lifetime_plugin lifetime_plugin;
     d.attach_plugin(lifetime_plugin);
 
@@ -420,5 +448,8 @@ TEST_CASE("Modulus2 basics") {
     CHECK(d.register_module<m5>(std::make_pair("m5", "")));
 
     CHECK(d.count() == 5);
+
+    d.attach_plugin(timer_quit_plugin);
     CHECK(d.exec() == exit_status::success);
+    CHECK_EQ(__timer_counter, 5);
 }

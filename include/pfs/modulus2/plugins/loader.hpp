@@ -1,6 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2019-2022 Vladislav Trifochkin
 //
+// License: see LICENSE file
+//
 // This file is part of `modulus2-lib`.
 //
 // Changelog:
