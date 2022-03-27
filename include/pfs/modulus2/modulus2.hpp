@@ -853,6 +853,11 @@ struct modulus2
             return *_settings_plugin;
         }
 
+        abstract_settings_plugin const & settings () const
+        {
+            return *_settings_plugin;
+        }
+
     ////////////////////////////////////////////////////////////////////////////
     // Logger specific methods
     ////////////////////////////////////////////////////////////////////////////

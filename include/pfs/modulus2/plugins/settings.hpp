@@ -78,7 +78,7 @@ public:
 
     template <typename T>
     typename std::enable_if<std::is_same<T, bool>::value, bool>::type
-    get (key_type const & key, bool default_value = false)
+    get (key_type const & key, bool default_value = false) const
     {
         auto prop = get_property(key, property{default_value});
         return pfs::get<bool>(prop);
@@ -87,16 +87,15 @@ public:
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value
         && !std::is_same<T, bool>::value, T>::type
-    get (key_type const & key, T default_value = 0)
+    get (key_type const & key, T default_value = 0) const
     {
         auto prop = get_property(key, property{static_cast<std::intmax_t>(default_value)});
         return static_cast<T>(pfs::get<std::intmax_t>(prop));
     }
 
     template <typename T>
-    typename std::enable_if<std::is_floating_point<T>::value
-        && !std::is_same<T, bool>::value, T>::type
-    get (key_type const & key, T default_value = 0)
+    typename std::enable_if<std::is_floating_point<T>::value, T>::type
+    get (key_type const & key, T default_value = 0) const
     {
         auto prop = get_property(key, property{static_cast<double>(default_value)});
         return static_cast<T>(pfs::get<double>(prop));
@@ -104,7 +103,7 @@ public:
 
     template <typename T>
     typename std::enable_if<std::is_same<T, std::string>::value, T>::type
-    get (key_type const & key, std::string const & default_value = std::string{})
+    get (key_type const & key, std::string const & default_value = std::string{}) const
     {
         auto prop = get_property(key, property{static_cast<std::string>(default_value)});
         return static_cast<T>(pfs::get<std::string>(prop));
