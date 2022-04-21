@@ -13,7 +13,7 @@
 #include "quit.hpp"
 #include <algorithm>
 
-#if _POSIX_C_SOURCE
+#if _POSIX_C_SOURCE || ANDROID
 #   define PFS_HAVE_POSIX_SIGNALS 1
 #   include <cassert>
 #   include <csignal>
@@ -94,6 +94,8 @@ private:
             });
 
         return success;
+#else
+        static_assert(false, "Expected platform has POSIX signals");
 #endif
     }
 
