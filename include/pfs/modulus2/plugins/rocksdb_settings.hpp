@@ -64,14 +64,17 @@ class rocksdb_settings_plugin: public abstract_settings_plugin
 private:
     database_type _db;
 
-protected:
-    property get_property (key_type const & key, property const & default_value) const override
+private:
+    property fetch_property (key_type const & key
+        , property const & default_value
+        , bool & found) const
     {
+        found = true;
         bool ok = true;
         auto value = _db.fetch(key, & ok);
 
         if (!ok) {
-            this->failure(fmt::format("no property found by key: [{}], used default", key));
+            found = false;
             return default_value;
         }
 
@@ -87,7 +90,28 @@ protected:
             return property{pfs::get<std::string>(value)};
         }
 
+        found = false;
         return default_value;
+    }
+
+protected:
+    property take_property (key_type const & key
+        , property const & default_value) override
+    {
+        bool found;
+        auto prop = fetch_property (key, default_value, found);
+
+        if (!found)
+            set_property(key, prop);
+
+        return prop;
+    }
+
+    property get_property (key_type const & key
+        , property const & default_value) const override
+    {
+        bool found;
+        return fetch_property (key, default_value, found);
     }
 
     void set_property (key_type const & key, property const & value) override

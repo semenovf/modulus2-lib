@@ -239,7 +239,12 @@ struct modulus2
             _dispatcher_ptr->log_error(this, s);
         }
 
-        auto settings () -> decltype(this->_dispatcher_ptr->settings())
+        auto settings () -> decltype(this->get_dispatcher().settings())
+        {
+            return this->get_dispatcher().settings();
+        }
+
+        auto settings () const -> decltype(this->get_dispatcher().settings())
         {
             return this->get_dispatcher().settings();
         }
