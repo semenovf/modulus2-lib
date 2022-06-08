@@ -35,6 +35,7 @@ struct modulus2
     using logger_type = LoggerType;
     using api_id_type = ApiIdType;
     using string_type = std::string;
+    using timer_id = pfs::timer_pool::timer_id;
 
     template <typename ...Args>
     using emitter_type = pfs::emitter_mt<Args...>;
@@ -1166,6 +1167,11 @@ struct modulus2
                 , timeout
                 , std::move(callback));
         }
+
+        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        {
+            this->_dispatcher_ptr->destroy_timer(id);
+        }
     };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1223,6 +1229,11 @@ struct modulus2
             return this->_dispatcher_ptr->start_timer(this->queue()
                 , timeout, std::move(callback));
         }
+
+        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        {
+            this->_dispatcher_ptr->destroy_timer(id);
+        }
     };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1272,6 +1283,11 @@ struct modulus2
         {
             return this->_dispatcher_ptr->start_timer(this->queue()
                 , timeout, std::move(callback));
+        }
+
+        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        {
+            this->_dispatcher_ptr->destroy_timer(id);
         }
     };
 };
