@@ -1186,7 +1186,7 @@ struct modulus2
         mutable function_queue_type _q;
 
     protected:
-        virtual function_queue_type * queue () const override
+        function_queue_type * queue () const override
         {
             return & _q;
         }
@@ -1194,6 +1194,26 @@ struct modulus2
         void call_all ()
         {
             _q.call_all();
+        }
+
+        void call ()
+        {
+            _q.call();
+        }
+
+        void call (int max_count)
+        {
+            _q.call(max_count);
+        }
+
+        void wait ()
+        {
+            _q.wait();
+        }
+
+        void wait_for (std::chrono::microseconds microseconds)
+        {
+            _q.wait_for(microseconds.count());
         }
 
     public:
