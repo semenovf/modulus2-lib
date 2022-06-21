@@ -536,11 +536,13 @@ struct modulus2
             return timer_callback.timerid;
         }
 
-        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        inline void destroy_timer (pfs::timer_pool::timer_id & id)
         {
             // _timer_pool_ptr may be already destroyed (i.e. on finalize())
-            if (_timer_pool_ptr)
+            if (_timer_pool_ptr) {
                 _timer_pool_ptr->destroy(id);
+                id = 0;
+            }
         }
 
     private:
@@ -1168,7 +1170,7 @@ struct modulus2
                 , std::move(callback));
         }
 
-        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        inline void destroy_timer (pfs::timer_pool::timer_id & id)
         {
             this->_dispatcher_ptr->destroy_timer(id);
         }
@@ -1250,7 +1252,7 @@ struct modulus2
                 , timeout, std::move(callback));
         }
 
-        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        inline void destroy_timer (pfs::timer_pool::timer_id & id)
         {
             this->_dispatcher_ptr->destroy_timer(id);
         }
@@ -1305,7 +1307,7 @@ struct modulus2
                 , timeout, std::move(callback));
         }
 
-        inline void destroy_timer (pfs::timer_pool::timer_id id)
+        inline void destroy_timer (pfs::timer_pool::timer_id & id)
         {
             this->_dispatcher_ptr->destroy_timer(id);
         }
