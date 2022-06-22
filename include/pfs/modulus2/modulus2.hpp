@@ -476,7 +476,7 @@ struct modulus2
             , basic_module const * m, string_type const & s) = nullptr;
 
         null_settings_plugin _null_settings_plugin;
-        abstract_settings_plugin * _settings_plugin{nullptr};
+        abstract_settings_plugin * _settings_plugin {nullptr};
 
     private:
         struct timer_callback_helper
@@ -849,11 +849,14 @@ struct modulus2
 
         void attach_plugin (abstract_settings_plugin & plugin)
         {
-            if (_settings_plugin)
-                _settings_plugin->failure.disconnect_all();
+            if (_settings_plugin) {
+                _settings_plugin->failure_printer.disconnect_all();
+                _settings_plugin->success_printer.disconnect_all();
+            }
 
             _settings_plugin = & plugin;
-            _settings_plugin->failure.connect(*this, & dispatcher::log_error);
+            _settings_plugin->failure_printer.connect(*this, & dispatcher::log_error);
+            _settings_plugin->success_printer.connect(*this, & dispatcher::log_info);
         }
 
         abstract_settings_plugin & settings ()
@@ -1048,6 +1051,12 @@ struct modulus2
 
             auto r = exit_status::success;
             thread_pool_type thread_pool;
+
+            // Do initial initializations for settings
+            if (!_settings_plugin->initialize()) {
+                log_error("Settings initialization failure, see details before");
+                return exit_status::failure;
+            }
 
             // Check if "main" module exists
             if (!_main_thread_module.empty()) {

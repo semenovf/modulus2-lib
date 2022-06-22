@@ -33,7 +33,8 @@ public:
     using key_type = std::string;
 
 public:
-    mutable pfs::emitter_mt<std::string const &> failure;
+    mutable pfs::emitter_mt<std::string const &> failure_printer;
+    mutable pfs::emitter_mt<std::string const &> success_printer;
 
 protected:
     /**
@@ -56,6 +57,12 @@ protected:
 
 public:
     virtual ~abstract_settings_plugin () {}
+
+    /**
+     * Used for initial initialization for settings (for initialize default
+     * values for example).
+     */
+    virtual bool initialize () { return true; }
 
     template <typename T>
     typename std::enable_if<std::is_same<T, bool>::value, void>::type
