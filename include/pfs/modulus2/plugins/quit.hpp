@@ -6,7 +6,7 @@
 // This file is part of `modulus2-lib`.
 //
 // Changelog:
-//      2021.06.18 Initial version
+//      2021.06.18 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "pfs/emitter.hpp"

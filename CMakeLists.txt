@@ -8,7 +8,7 @@
 #      2021.06.18 Added 'demo' subdirectory.
 ################################################################################
 cmake_minimum_required (VERSION 3.11)
-project(modulus2-lib-ALL CXX)
+project(modulus2-ALL CXX)
 
 option(MODULUS2__BUILD_STRICT "Build with strict policies: C++ standard required, C++ extension is OFF etc" ON)
 option(MODULUS2__BUILD_TESTS "Build tests" OFF)

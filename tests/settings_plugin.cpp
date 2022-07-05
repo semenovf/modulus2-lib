@@ -86,23 +86,48 @@ void check (modulus::abstract_settings_plugin * s)
 
 TEST_CASE("settings_plugin")
 {
-    std::vector<modulus::abstract_settings_plugin*> settings_list;
-
-    modulus::in_memory_settings_plugin in_memory_settings;
-    settings_list.push_back(& in_memory_settings);
-
 #if MODULUS2__ROCKSDB_ENABLED
-    auto rocksdb_path = pfs::filesystem::temp_directory_path() / "modulus2_rocksdb_settings_plugin";
-
-    modulus::rocksdb_settings_plugin rocksdb_settings {rocksdb_path};
-    settings_list.push_back(& rocksdb_settings);
+    pfs::filesystem::path rocksdb_path;
 #endif
 
-    for (auto & settings: settings_list) {
-        check(std::move(settings));
+    // Enclose to brackets for remove `rocksdb_path` directory at the end.
+    {
+        std::vector<modulus::abstract_settings_plugin*> settings_list;
+
+        modulus::in_memory_settings_plugin in_memory_settings;
+        settings_list.push_back(&in_memory_settings);
+
+#if MODULUS2__ROCKSDB_ENABLED
+        rocksdb_path = pfs::filesystem::temp_directory_path()
+            / PFS__LITERAL_PATH("modulus2_rocksdb_settings_plugin");
+
+        if (pfs::filesystem::exists(rocksdb_path)) {
+            TRY {
+                pfs::filesystem::remove_all(rocksdb_path);
+            } CATCH(pfs::filesystem::filesystem_error ex) {
+                REQUIRE_MESSAGE(false, ex.what());
+            } CATCH(...) {
+                REQUIRE_MESSAGE(false, "Unhandled exception");
+            }
+        }
+
+        modulus::rocksdb_settings_plugin rocksdb_settings {rocksdb_path};
+        settings_list.push_back(&rocksdb_settings);
+#endif
+
+        for (auto& settings : settings_list) {
+            check(std::move(settings));
+        }
     }
 
 #if MODULUS2__ROCKSDB_ENABLED
-    pfs::filesystem::remove_all(rocksdb_path);
+    TRY {
+        if (!rocksdb_path.empty())
+            pfs::filesystem::remove_all(rocksdb_path);
+    } CATCH (pfs::filesystem::filesystem_error ex) {
+        REQUIRE_MESSAGE(false, ex.what());
+    } CATCH (...) {
+        REQUIRE_MESSAGE(false, "Unhandled exception");
+    }
 #endif
 }

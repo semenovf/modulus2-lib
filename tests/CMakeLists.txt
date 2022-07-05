@@ -7,11 +7,11 @@
 #      2021.05.20 Initial version.
 #      2021.12.21 Refactored for using portable_target `ADD_TEST`.
 ################################################################################
-project(modulus2-lib-TESTS CXX C)
+project(modulus2-TESTS CXX C)
 
 
 list(APPEND TESTS
-    modulus2
+    modulus2basic
     mangling
     settings_plugin)
 
@@ -19,5 +19,5 @@ foreach (t ${TESTS})
     portable_target(ADD_TEST ${t}
         ENABLE_COVERAGE ${DEBBY__ENABLE_COVERAGE}
         SOURCES ${t}.cpp ${${t}_SOURCES}
-        LINK pfs::modulus2)
+        LINK pfs::modulus2 pfs::debby)
 endforeach()

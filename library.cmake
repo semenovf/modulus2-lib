@@ -8,7 +8,7 @@
 #      2021.11.30 Refactored using `portable-target`.
 ################################################################################
 cmake_minimum_required (VERSION 3.11)
-project(modulus2-lib CXX C)
+project(modulus2 CXX C)
 
 option(MODULUS2__ENABLE_EXCEPTIONS "Enable exceptions for library" ON)
 option(MODULUS2__ENABLE_SPDLOG "Enable `spdlog` library for logger" OFF)

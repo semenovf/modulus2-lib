@@ -14,12 +14,14 @@
 #include <algorithm>
 
 #if _POSIX_C_SOURCE || ANDROID
-#   define PFS_HAVE_POSIX_SIGNALS 1
+#   define MODULUS2__POSIX_QUIT_PLUGIN_ENABLED 1
 #   include <cassert>
 #   include <csignal>
 #endif
 
 namespace modulus {
+
+#if MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
 enum  {
     // SIGHUP  - Hangup detected on controlling terminal
@@ -58,7 +60,6 @@ class posix_quit_plugin : public quit_plugin
 private:
     bool set_quit_handler (void (* handler)(int))
     {
-#if PFS_HAVE_POSIX_SIGNALS
         std::vector<int> signums_vector;
 
         struct sigaction act;
@@ -94,9 +95,6 @@ private:
             });
 
         return success;
-#else
-        static_assert(false, "Expected platform has POSIX signals");
-#endif
     }
 
 public:
@@ -110,9 +108,7 @@ public:
 
     ~posix_quit_plugin ()
     {
-#if PFS_HAVE_POSIX_SIGNALS
         set_quit_handler(SIG_DFL);
-#endif
     }
 
     static void handler (int)
@@ -123,5 +119,7 @@ public:
 };
 
 posix_quit_plugin * posix_quit_plugin::_instance {nullptr};
+
+#endif // MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
 } // namespace modulus

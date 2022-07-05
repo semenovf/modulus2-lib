@@ -24,6 +24,25 @@ class in_memory_settings_plugin: public abstract_settings_plugin
     mutable std::mutex _mtx;
 
 protected:
+    property take_property (key_type const & key
+        , property const & default_value) override
+    {
+        std::lock_guard<std::mutex> lock{ _mtx };
+        auto it = _s.find(key);
+
+        if (it != _s.end())
+            return it->second;
+
+        set_property(key, default_value);
+
+        it = _s.find(key);
+
+        if (it != _s.end())
+            return it->second;
+
+        return default_value;
+    }
+
     property get_property (key_type const & key, property const & default_value) const override
     {
         std::lock_guard<std::mutex> lock{_mtx};

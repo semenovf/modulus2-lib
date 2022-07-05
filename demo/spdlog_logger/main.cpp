@@ -12,7 +12,7 @@
 #include "pfs/fmt.hpp"
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/spdlog_logger.hpp"
-#include "pfs/modulus2/plugins/posix_quit.hpp"
+#include "pfs/modulus2/plugins/platform_quit.hpp"
 
 // SPDLOG sink headers
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -64,7 +64,9 @@ int main ()
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
     sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(
-        fs::temp_directory_path() / "modulus2_spdlog_logger_demo.log", 23, 59));
+        fs::utf8_encode(fs::temp_directory_path() 
+            / PFS__LITERAL_PATH("modulus2_spdlog_logger_demo.log"))
+        , 23, 59));
 
 #if defined(ANDROID)
     std::string tag = "modulus2_spdlog_logger_demo";
@@ -78,9 +80,9 @@ int main ()
     logger.set_level(spdlog::level::trace);
 
     modulus2_t::dispatcher d{logger};
-    modulus::posix_quit_plugin posix_quit_plugin;
+    modulus::platform_quit_plugin quit_plugin;
 
-    d.attach_plugin(posix_quit_plugin);
+    d.attach_plugin(quit_plugin);
     d.register_module<m1>(std::make_pair("m1", ""));
 
     fmt::print("Press Ctrl+C to stop execution\n");

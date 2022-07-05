@@ -8,8 +8,10 @@
 cmake_minimum_required (VERSION 3.5)
 
 if (NOT MODULUS2__SPDLOG_ROOT)
-    set(MODULUS2__SPDLOG_ROOT ${CMAKE_CURRENT_LIST_DIR}/3rdparty/spdlog)
+    set(MODULUS2__SPDLOG_ROOT "${CMAKE_CURRENT_LIST_DIR}/../3rdparty/spdlog")
 endif()
+
+set(SPDLOG_FMT_EXTERNAL_HO ON CACHE BOOL "Use external fmt header-only library instead of bundled" FORCE)
 
 add_subdirectory(${MODULUS2__SPDLOG_ROOT} spdlog)
 

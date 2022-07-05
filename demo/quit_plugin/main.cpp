@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/plugins/posix_quit.hpp"
+#include "pfs/modulus2/plugins/platform_quit.hpp"
 #include "pfs/modulus2/plugins/timer_quit.hpp"
 #include <chrono>
 #include <thread>
@@ -25,12 +25,12 @@ int main ()
     int timeout = 5; // seconds
     modulus::iostream_logger logger;
     modulus::timer_quit_plugin timer_quit_plugin {timeout};
-    modulus::posix_quit_plugin posix_quit_plugin;
+    modulus::platform_quit_plugin quit_plugin;
 
     modulus2_t::dispatcher d{logger};
 
     d.attach_plugin(timer_quit_plugin);
-    d.attach_plugin(posix_quit_plugin);
+    d.attach_plugin(quit_plugin);
 
     std::cout << "Sleeping " << timeout << " second(s) before quit"
         << " (or press Ctrl+C to interrupt at any time) ...\n";
