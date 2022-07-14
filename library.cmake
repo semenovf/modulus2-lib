@@ -14,6 +14,10 @@ option(MODULUS2__ENABLE_EXCEPTIONS "Enable exceptions for library" ON)
 option(MODULUS2__ENABLE_SPDLOG "Enable `spdlog` library for logger" OFF)
 option(MODULUS2__ENABLE_ROCKSDB "Enable `RocksDb` library as backend for settings" OFF)
 
+portable_target(ADD_INTERFACE ${PROJECT_NAME} ALIAS pfs::modulus2)
+portable_target(INCLUDE_DIRS ${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::common pfs::debby)
+
 if (MODULUS2__ENABLE_EXCEPTIONS)
     set(PFS__ENABLE_EXCEPTIONS ON CACHE INTERNAL "")
     set(DEBBY__ENABLE_EXCEPTIONS ON CACHE INTERNAL "")
@@ -42,15 +46,11 @@ if (MODULUS2__ENABLE_SPDLOG)
         ${CMAKE_CURRENT_LIST_DIR}/cmake/Spdlog.cmake)
 endif()
 
-portable_target(LIBRARY ${PROJECT_NAME} INTERFACE ALIAS pfs::modulus2)
-portable_target(INCLUDE_DIRS ${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
-portable_target(LINK ${PROJECT_NAME} pfs::common pfs::debby)
-
 if (MODULUS2__ENABLE_ROCKSDB)
-    portable_target(DEFINITIONS ${PROJECT_NAME} INTERFACE "-DMODULUS2__ROCKSDB_ENABLED=1")
+    portable_target(DEFINITIONS ${PROJECT_NAME} INTERFACE "MODULUS2__ROCKSDB_ENABLED=1")
 endif()
 
 if (MODULUS2__ENABLE_SPDLOG)
-    portable_target(DEFINITIONS ${PROJECT_NAME} INTERFACE "-DMODULUS2__SPDLOG_ENABLED=1")
+    portable_target(DEFINITIONS ${PROJECT_NAME} INTERFACE "MODULUS2__SPDLOG_ENABLED=1")
     portable_target(LINK ${PROJECT_NAME} INTERFACE spdlog::spdlog)
 endif()

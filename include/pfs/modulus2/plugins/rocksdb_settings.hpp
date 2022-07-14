@@ -29,11 +29,11 @@ class rocksdb_settings_plugin: public abstract_settings_plugin
 
         void operator () (std::intmax_t x) const
         {
-            if (x >= std::numeric_limits<int8_t>::min() && x <= std::numeric_limits<int8_t>::max())
+            if (x >= (std::numeric_limits<int8_t>::min)() && x <= (std::numeric_limits<int8_t>::max)())
                 pdb->set(*pkey, static_cast<std::int8_t>(x));
-            else if (x >= std::numeric_limits<int16_t>::min() && x <= std::numeric_limits<int16_t>::max())
+            else if (x >= (std::numeric_limits<int16_t>::min)() && x <= (std::numeric_limits<int16_t>::max)())
                 pdb->set(*pkey, static_cast<std::int16_t>(x));
-            else if (x >= std::numeric_limits<int32_t>::min() && x <= std::numeric_limits<int32_t>::max())
+            else if (x >= (std::numeric_limits<int32_t>::min)() && x <= (std::numeric_limits<int32_t>::max)())
                 pdb->set(*pkey, static_cast<std::int32_t>(x));
             else
                 pdb->set(*pkey, x);
