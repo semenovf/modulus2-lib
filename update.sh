@@ -12,8 +12,9 @@ if [ -d .git ] ; then
         && git submodule update --init --remote -- 3rdparty/pfs/common \
         && git submodule update --init --remote -- 3rdparty/pfs/debby \
         && cd 3rdparty/pfs/debby/3rdparty/rocksdb && git checkout $ROCKSDB_RELEASE \
+        && cd $CWD \
         && cd 3rdparty/spdlog && git checkout $SPDLOG_RELEASE \
         && cd $CWD
-        
+
 fi
 
