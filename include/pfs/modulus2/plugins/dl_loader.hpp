@@ -11,7 +11,7 @@
 #pragma once
 #include "loader.hpp"
 #include "pfs/dynamic_library.hpp"
-#include "pfs/fmt.hpp"
+#include "pfs/i18n.hpp"
 #include <memory>
 
 #if ANDROID
@@ -71,9 +71,6 @@ private:
         static char const * module_ctor_name = "__module_ctor__";
         static char const * module_dtor_name = "__module_dtor__";
 
-        //auto dylib_ptr = std::make_shared<pfs::dynamic_library>();
-        //std::error_code ec;
-
         fs::path orig_path(path);
         fs::path dylib_path(path);
 
@@ -92,6 +89,7 @@ private:
         }
 
         if (!fs::exists(dylib_path)) {
+            // This is a critical section, so log output must not depends on logger
 #if ANDROID
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "module not found: %s\n", dylib_path.c_str());
@@ -102,8 +100,8 @@ private:
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        pfs::error err;
-        auto dylib_ptr = std::make_shared<pfs::dynamic_library>(dylib_path, & err);
+        std::error_code ec;
+        auto dylib_ptr = std::make_shared<pfs::dynamic_library>(dylib_path, ec);
 
         if (!*dylib_ptr) {
             // This is a critical section, so log output must not depends on logger
@@ -111,34 +109,33 @@ private:
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "open module failed: %s: %s\n"
                 , dylib_path.c_str()
-                , err.what().c_str());
+                , ec.message().c_str());
 #else
             fmt::print(stderr, "open module failed: {}: {}\n"
                 , fs::utf8_encode(dylib_path)
-                , err.what());
+                , ec.message());
 #endif
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        auto module_ctor = dylib_ptr->resolve<basic_module_type*(void)>(module_ctor_name, & err);
+        auto module_ctor = dylib_ptr->resolve<basic_module_type*(void)>(module_ctor_name, ec);
 
-        if (err) {
-            this->failure(fmt::format("{}: failed to resolve constructor `{}' for module: {}"
+        if (ec) {
+            this->failure(tr::f_("{}: failed to resolve constructor `{}' for module: {}"
                 , fs::utf8_encode(dylib_path)
                 , std::string(module_ctor_name)
-                , err.what()));
+                , ec.message()));
 
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        //pfs::dynamic_library::symbol_type dtor = dylib_ptr->resolve(module_dtor_name, ec);
-        auto module_dtor = dylib_ptr->resolve<void(basic_module_type*)>(module_dtor_name, & err);
+        auto module_dtor = dylib_ptr->resolve<void(basic_module_type*)>(module_dtor_name, ec);
 
-        if (err) {
-            this->failure(fmt::format("{}: failed to resolve destructor `{}' for module: {}"
+        if (ec) {
+            this->failure(tr::f_("{}: failed to resolve destructor `{}' for module: {}"
                 , fs::utf8_encode(dylib_path)
                 , std::string(module_dtor_name)
-                , err.what()));
+                , ec.message()));
 
             return module_pointer{nullptr, module_deleter{}};
         }

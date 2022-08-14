@@ -102,11 +102,11 @@ TEST_CASE("settings_plugin")
             / PFS__LITERAL_PATH("modulus2_rocksdb_settings_plugin");
 
         if (pfs::filesystem::exists(rocksdb_path)) {
-            TRY {
+            try {
                 pfs::filesystem::remove_all(rocksdb_path);
-            } CATCH(pfs::filesystem::filesystem_error ex) {
+            } catch (pfs::filesystem::filesystem_error ex) {
                 REQUIRE_MESSAGE(false, ex.what());
-            } CATCH(...) {
+            } catch (...) {
                 REQUIRE_MESSAGE(false, "Unhandled exception");
             }
         }
@@ -121,12 +121,12 @@ TEST_CASE("settings_plugin")
     }
 
 #if MODULUS2__ROCKSDB_ENABLED
-    TRY {
+    try {
         if (!rocksdb_path.empty())
             pfs::filesystem::remove_all(rocksdb_path);
-    } CATCH (pfs::filesystem::filesystem_error ex) {
+    } catch (pfs::filesystem::filesystem_error ex) {
         REQUIRE_MESSAGE(false, ex.what());
-    } CATCH (...) {
+    } catch (...) {
         REQUIRE_MESSAGE(false, "Unhandled exception");
     }
 #endif
