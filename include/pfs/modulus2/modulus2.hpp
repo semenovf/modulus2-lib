@@ -1047,7 +1047,7 @@ struct modulus2
         exit_status exec ()
         {
             // Initialize timer pool
-            _timer_pool_ptr.reset(new timer_pool_type);
+            _timer_pool_ptr = pfs::make_unique<timer_pool_type>();
 
             auto r = exit_status::success;
             thread_pool_type thread_pool;

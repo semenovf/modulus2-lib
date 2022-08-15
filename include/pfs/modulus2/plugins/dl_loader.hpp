@@ -100,24 +100,22 @@ private:
             return module_pointer{nullptr, module_deleter{}};
         }
 
-        std::error_code ec;
-        auto dylib_ptr = std::make_shared<pfs::dynamic_library>(dylib_path, ec);
+        std::shared_ptr<pfs::dynamic_library> dylib_ptr;
 
-        if (!*dylib_ptr) {
+        try {
+            dylib_ptr = std::make_shared<pfs::dynamic_library>(dylib_path);
+        } catch (pfs::error ex) {
             // This is a critical section, so log output must not depends on logger
 #if ANDROID
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
-                , "open module failed: %s: %s\n"
-                , dylib_path.c_str()
-                , ec.message().c_str());
+                , "%s\n", ex.what().c_str());
 #else
-            fmt::print(stderr, "open module failed: {}: {}\n"
-                , fs::utf8_encode(dylib_path)
-                , ec.message());
+            fmt::print(stderr, "{}\n", ex.what());
 #endif
             return module_pointer{nullptr, module_deleter{}};
         }
 
+        std::error_code ec;
         auto module_ctor = dylib_ptr->resolve<basic_module_type*(void)>(module_ctor_name, ec);
 
         if (ec) {
