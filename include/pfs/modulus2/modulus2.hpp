@@ -505,14 +505,18 @@ struct modulus2
             , std::chrono::milliseconds period
             , typename timer_pool_type::callback_type && callback)
         {
-            timer_callback_helper timer_callback;
-            timer_callback.callback_queue = callback_queue;
-            timer_callback.callback = std::move(callback);
-            timer_callback.timerid = _timer_pool_ptr->create(period
-                , period
-                , std::move(timer_callback));
+            if (_timer_pool_ptr) {
+                timer_callback_helper timer_callback;
+                timer_callback.callback_queue = callback_queue;
+                timer_callback.callback = std::move(callback);
+                timer_callback.timerid = _timer_pool_ptr->create(period
+                    , period
+                    , std::move(timer_callback));
 
-            return timer_callback.timerid;
+                return timer_callback.timerid;
+            }
+
+            return pfs::timer_pool::timer_id{0};
         }
 
         /**
@@ -527,13 +531,17 @@ struct modulus2
             , std::chrono::milliseconds timeout
             , typename timer_pool_type::callback_type && callback)
         {
-            timer_callback_helper timer_callback;
-            timer_callback.callback_queue = callback_queue;
-            timer_callback.callback = std::move(callback);
-            timer_callback.timerid = _timer_pool_ptr->create(timeout
-                , std::move(timer_callback));
+            if (_timer_pool_ptr) {
+                timer_callback_helper timer_callback;
+                timer_callback.callback_queue = callback_queue;
+                timer_callback.callback = std::move(callback);
+                timer_callback.timerid = _timer_pool_ptr->create(timeout
+                    , std::move(timer_callback));
 
-            return timer_callback.timerid;
+                return timer_callback.timerid;
+            }
+
+            return pfs::timer_pool::timer_id{0};
         }
 
         inline void destroy_timer (pfs::timer_pool::timer_id & id)
