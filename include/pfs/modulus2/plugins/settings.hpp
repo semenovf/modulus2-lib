@@ -58,12 +58,6 @@ protected:
 public:
     virtual ~abstract_settings_plugin () {}
 
-    /**
-     * Used for initial initialization for settings (for initialize default
-     * values for example).
-     */
-    virtual bool initialize () { return true; }
-
     template <typename T>
     typename std::enable_if<std::is_same<T, bool>::value, void>::type
     set (key_type const & key, T value)

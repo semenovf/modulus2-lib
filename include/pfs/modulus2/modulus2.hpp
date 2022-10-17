@@ -1060,12 +1060,6 @@ struct modulus2
             auto r = exit_status::success;
             thread_pool_type thread_pool;
 
-            // Do initial initializations for settings
-            if (!_settings_plugin->initialize()) {
-                log_error("Settings initialization failure, see details before");
-                return exit_status::failure;
-            }
-
             // Check if "main" module exists
             if (!_main_thread_module.empty()) {
                 if (_module_specs.find(_main_thread_module) == _module_specs.end()) {
