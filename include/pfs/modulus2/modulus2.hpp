@@ -15,8 +15,8 @@
 #include "pfs/modulus2/plugins/settings.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/filesystem.hpp"
-#include "pfs/fmt.hpp"
 #include "pfs/function_queue.hpp"
+#include "pfs/i18n.hpp"
 #include "pfs/memory.hpp"
 #include "pfs/timer_pool.hpp"
 #include <map>
@@ -296,7 +296,7 @@ struct modulus2
             , string_type const & ename  // emitter owner name
             , string_type const & dname) // detector owner name
         {
-            _dispatcher_ptr->log_trace(fmt::format("\tEmitter [{}]"
+            _dispatcher_ptr->log_trace(tr::f_("\tEmitter [{}]"
                 " of module [{}]"
                 " connected with corresponding detector of module [{}]"
                 , id, ename, dname));
@@ -315,7 +315,7 @@ struct modulus2
             _module_ptr->set_dispatcher(& d);
             _module_ptr->set_name(name);
 
-            _dispatcher_ptr->log_trace(fmt::format("Declare emitters for module: {}"
+            _dispatcher_ptr->log_trace(tr::f_("Declare emitters for module: {}"
                 , this->name()));
             _module_ptr->declare_emitters(*this);
         }
@@ -342,7 +342,7 @@ struct modulus2
         template <typename ...Args>
         void declare_emitter (api_id_type id, emitter_type<Args...> & em)
         {
-            _dispatcher_ptr->log_trace(fmt::format("\tCaching emitter [{}] for {}"
+            _dispatcher_ptr->log_trace(tr::f_("\tCaching emitter [{}] for {}"
                 , id, this->name()));
             _emitter_cache.emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
         }
@@ -380,7 +380,7 @@ struct modulus2
         void connect_emitters (typename map_type::iterator first
             , typename map_type::iterator last)
         {
-            _dispatcher_ptr->log_trace("Connecting emitters:");
+            _dispatcher_ptr->log_trace(tr::_("Connecting emitters:"));
 
             // Connecting emitters of this module with corresponding detectors
             // of modules in range [first; last) and with own detectors
@@ -419,7 +419,7 @@ struct modulus2
                 em.second->disconnect_all();
             }
 
-            _dispatcher_ptr->log_trace(fmt::format("emitters disconnected for [{}]"
+            _dispatcher_ptr->log_trace(tr::f_("emitters disconnected for [{}]"
                 , _module_ptr->name()));
         }
 
@@ -593,7 +593,7 @@ struct modulus2
                     auto parent_it = _module_specs.find(parent_name);
 
                     if (parent_it == _module_specs.end()) {
-                        log_error(fmt::format(
+                        log_error(tr::f_(
                             "Parent module [{}] not found for module [{}]"
                             , parent_name, name));
                         return false;
@@ -602,7 +602,7 @@ struct modulus2
                     auto q = parent_it->second.module()->queue();
 
                     if (! q) {
-                        log_error(fmt::format(
+                        log_error(tr::f_(
                             "Parent module [{}] is not runnable or a guest module"
                             , parent_name));
                         return false;
@@ -617,7 +617,7 @@ struct modulus2
             auto ctx_it = _module_specs.find(ctx.name());
 
             if (ctx_it != _module_specs.end()) {
-                log_error(fmt::format("{}: module already registered", ctx.name()));
+                log_error(tr::f_("{}: module already registered", ctx.name()));
                 return false;
             }
 
@@ -635,7 +635,7 @@ struct modulus2
                 assert(emplaced_module.second);
                 auto & ctx = emplaced_module.first->second;
 
-                log_debug(fmt::format("{}: registered", ctx.name()));
+                log_debug(tr::f_("{}: registered", ctx.name()));
 
                 // Notify external subscribers
                 this->module_registered(ctx.name());
@@ -654,7 +654,7 @@ struct modulus2
             pos->disconnect_emitters();
             auto result = _module_specs.erase(pos);
 
-            log_debug(fmt::format("{}: unregistered", name));
+            log_debug(tr::f_("{}: unregistered", name));
 
             this->module_unregistered(name);
 
@@ -691,16 +691,16 @@ struct modulus2
                     assert(module_ptr);
 
                     if (!module_ptr->is_runnable()) {
-                        log_error(fmt::format("Module [{}] must be runnable"
+                        log_error(tr::f_("Module [{}] must be runnable"
                             , module_ptr->name()));
                         r = exit_status::failure;
                     } else {
                         if (!module_ptr->on_start()) {
                             r = exit_status::failure;
-                            log_error(fmt::format("Module [{}] start failure"
+                            log_error(tr::f_("Module [{}] start failure"
                                 , module_ptr->name()));
                         } else {
-                            log_trace(fmt::format("Module [{}] started successfully"
+                            log_trace(tr::f_("Module [{}] started successfully"
                                 , module_ptr->name()));
                         }
                     }
@@ -719,11 +719,11 @@ struct modulus2
                         if (module_ptr->is_guest()) {
                             if (!module_ptr->on_start()) {
                                 r = exit_status::failure;
-                                log_error(fmt::format("Module [{}] start failure"
+                                log_error(tr::f_("Module [{}] start failure"
                                     , module_ptr->name()));
                                 break;
                             } else {
-                                log_trace(fmt::format("Module [{}] started successfully"
+                                log_trace(tr::f_("Module [{}] started successfully"
                                     , module_ptr->name()));
                             }
                         }
@@ -984,8 +984,7 @@ struct modulus2
             }
 
             if (!found) {
-                log_error(fmt::format("no module found by path: {}"
-                    , path));
+                log_error(tr::f_("no module found by path: {}", path));
             }
 
             return found && success;
@@ -1012,10 +1011,8 @@ struct modulus2
                 }
             }
 
-            if (!found) {
-                log_error(fmt::format("no module found by name: {}"
-                    , basename));
-            }
+            if (!found)
+                log_error(tr::f_("no module found by name: {}", basename));
 
             return found && success;
         }
@@ -1042,7 +1039,7 @@ struct modulus2
         {
             for (auto & ctx: _module_specs) {
                 ctx.second.disconnect_emitters();
-                log_debug(fmt::format("{}: unregistered", ctx.second.module()->name()));
+                log_debug(tr::f_("{}: unregistered", ctx.second.module()->name()));
                 this->module_unregistered(ctx.second.module()->name());
             }
 
@@ -1063,7 +1060,7 @@ struct modulus2
             // Check if "main" module exists
             if (!_main_thread_module.empty()) {
                 if (_module_specs.find(_main_thread_module) == _module_specs.end()) {
-                    log_error(fmt::format("Module [{}] specified as \"main\" module not found"
+                    log_error(tr::f_("Module [{}] specified as \"main\" module not found"
                         , _main_thread_module));
                     return exit_status::failure;
                 }
@@ -1081,11 +1078,11 @@ struct modulus2
                 auto module_ptr = ctx.second.module();
 
                 if (module_ptr->runnable()) {
-                    log_trace(fmt::format("Module [{}] is runnable"
+                    log_trace(tr::f_("Module [{}] is runnable"
                         , module_ptr->name()));
 
                     if (_main_thread_module == module_ptr->name()) {
-                        log_trace(fmt::format("Module [{}] will be run in \"main\" thread"
+                        log_trace(tr::f_("Module [{}] will be run in \"main\" thread"
                             , module_ptr->name()));
 
                         // Launching is below
@@ -1095,20 +1092,19 @@ struct modulus2
                             , module_ptr->name());
                     }
                 } else if (module_ptr->is_regular()) {
-                    log_trace(fmt::format("Module [{}] is regular"
+                    log_trace(tr::f_("Module [{}] is regular"
                         , module_ptr->name()));
 
                     if (!module_ptr->on_start()) {
                         r = exit_status::failure;
-                        log_error(fmt::format("Module [{}] start failure"
+                        log_error(tr::f_("Module [{}] start failure"
                             , module_ptr->name()));
                     } else {
-                            log_trace(fmt::format("Module [{}] started successfully"
+                            log_trace(tr::f_("Module [{}] started successfully"
                                 , module_ptr->name()));
                     }
                 } else {
-                    log_trace(fmt::format("Module [{}] is guest"
-                        , module_ptr->name()));
+                    log_trace(tr::f_("Module [{}] is guest", module_ptr->name()));
                 }
             }
 
