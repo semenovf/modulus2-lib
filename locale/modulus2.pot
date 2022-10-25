@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) YEAR Trifochkin\ Vladislav
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-24 17:37+0500\n"
+"POT-Creation-Date: 2022-10-25 14:39+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,89 +17,64 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:299
 msgid ""
 "\tEmitter [{}] of module [{}] connected with corresponding detector of "
 "module [{}]"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:318
 msgid "Declare emitters for module: {}"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:345
 msgid "\tCaching emitter [{}] for {}"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:383
 msgid "Connecting emitters:"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:422
 msgid "emitters disconnected for [{}]"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:597
 msgid "Parent module [{}] not found for module [{}]"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:606
 msgid "Parent module [{}] is not runnable or a guest module"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:620
 msgid "{}: module already registered"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:638
 msgid "{}: registered"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:657
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1042
 msgid "{}: unregistered"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:694
 msgid "Module [{}] must be runnable"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:700
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:722
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1100
 msgid "Module [{}] start failure"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:703
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:726
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1103
 msgid "Module [{}] started successfully"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:987
 msgid "no module found by path: {}"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1015
 msgid "no module found by name: {}"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1063
 msgid "Module [{}] specified as \"main\" module not found"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1081
 msgid "Module [{}] is runnable"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1085
 msgid "Module [{}] will be run in \"main\" thread"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1095
 msgid "Module [{}] is regular"
 msgstr ""
 
-#: /home/wladt/ws/pfs/modulus2/src/include/pfs/modulus2/modulus2.hpp:1107
 msgid "Module [{}] is guest"
 msgstr ""
