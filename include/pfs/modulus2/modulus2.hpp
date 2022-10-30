@@ -178,14 +178,19 @@ struct modulus2
         // For slave module must return master (runnable or dispatcher) queue.
         virtual function_queue_type * queue () const = 0;
 
+        bool is_quit (int & status ) const
+        {
+            return _dispatcher_ptr->is_quit(status);
+        }
+
         bool is_quit () const
         {
             return _dispatcher_ptr->is_quit();
         }
 
-        void quit ()
+        void quit (int status = -1)
         {
-            _dispatcher_ptr->quit();
+            _dispatcher_ptr->quit(status);
         }
 
     public:
@@ -766,7 +771,7 @@ struct modulus2
                     module_ptr->runnable()->flush();
                 }
             } else {
-                _quit_flag = true;
+                _quit_flag.store(-1);
             }
 
             // Finalize children
@@ -817,14 +822,27 @@ struct modulus2
             unregister_all();
         }
 
-        void quit ()
+        /**
+         * Quit with status.
+         *
+         * @details @c -1 is special reserved value for normal (predefined)
+         *          exit status. Developer can use any values greater than zero.
+         *          @c 0 is forbidden value and interpreted as @c -1.
+         */
+        void quit (int status = -1)
         {
             for (auto & ctx: _module_specs) {
                 basic_module * m = ctx.second.module();
                 m->on_about_quit();
             }
 
-            _quit_flag.store(1);
+            _quit_flag.store(status == 0 ? -1 : status);
+        }
+
+        bool is_quit (int & status) const
+        {
+            status = _quit_flag.load();
+            return (status != 0);
         }
 
         bool is_quit () const

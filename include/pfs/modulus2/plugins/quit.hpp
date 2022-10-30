@@ -16,7 +16,7 @@ namespace modulus {
 class quit_plugin
 {
 public:
-    using emitter_type = pfs::emitter_mt<>;
+    using emitter_type = pfs::emitter_mt<int>;
 
 public:
     emitter_type quit;

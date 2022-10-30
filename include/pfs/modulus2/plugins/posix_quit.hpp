@@ -109,12 +109,13 @@ public:
     ~posix_quit_plugin ()
     {
         set_quit_handler(SIG_DFL);
+        _instance = nullptr;
     }
 
-    static void handler (int)
+    static void handler (int signum)
     {
         assert(_instance);
-        _instance->quit();
+        _instance->quit(-100 - signum);
     }
 };
 
