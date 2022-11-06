@@ -38,7 +38,7 @@ private:
             case CTRL_CLOSE_EVENT:
             case CTRL_LOGOFF_EVENT:
             case CTRL_SHUTDOWN_EVENT:
-                _instance->quit();
+                _instance->quit(0);
                 // Signal is handled
                 return TRUE;
             default:
