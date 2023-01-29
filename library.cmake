@@ -71,7 +71,7 @@ if (MODULUS2__ENABLE_SPDLOG)
     portable_target(LINK ${PROJECT_NAME} INTERFACE spdlog::spdlog)
 endif()
 
-portable_target(TRANSLATE UPDATE ${PROJECT_NAME}
-    NO_SOURCE_LOCATION
-    LANGUAGES ru
-    SOURCES ${CMAKE_CURRENT_LIST_DIR}/include/pfs/modulus2/modulus2.hpp)
+#portable_target(TRANSLATE UPDATE ${PROJECT_NAME}
+#    NO_SOURCE_LOCATION
+#    LANGUAGES ru
+#    SOURCES ${CMAKE_CURRENT_LIST_DIR}/include/pfs/modulus2/modulus2.hpp)
