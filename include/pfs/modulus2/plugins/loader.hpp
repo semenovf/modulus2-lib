@@ -30,9 +30,9 @@ public:
     pfs::emitter_mt<std::string const &> failure;
 
 public:
-    virtual module_pointer load_module_for_path (fs::path const & path
+    virtual std::pair<module_pointer, std::string> load_module_for_path (fs::path const & path
         , std::list<fs::path> const & search_dirs) = 0;
-    virtual module_pointer load_module_for_name (std::string const & name
+    virtual std::pair<module_pointer, std::string> load_module_for_name (std::string const & name
         , std::list<fs::path> const & search_dirs) = 0;
 
 public:

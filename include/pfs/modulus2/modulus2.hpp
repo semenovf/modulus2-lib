@@ -138,7 +138,9 @@ struct modulus2
 //         //using thread_function = modulus::thread_function;
 //
     protected:
-        string_type  _name;
+        string_type _name;
+        std::string _path; // May be local filesystem path, URI or any other
+                           // resource identifier
         dispatcher * _dispatcher_ptr {nullptr};
 
     protected:
@@ -162,6 +164,11 @@ struct modulus2
         void set_name (string_type const & name) noexcept
         {
             _name = name;
+        }
+
+        void set_path (std::string const & path) noexcept
+        {
+            _path = path;
         }
 
         virtual void declare_emitters (module_context &)
@@ -199,6 +206,11 @@ struct modulus2
         string_type const & name () const noexcept
         {
             return _name;
+        }
+
+        std::string const & path () const noexcept
+        {
+            return _path;
         }
 
         virtual runnable_interface * runnable () { return nullptr; }
@@ -311,6 +323,7 @@ struct modulus2
         module_context (dispatcher & d
                 , string_type const & name
                 , string_type const & parent_name
+                , string_type const & path
                 , module_pointer && m)
             : _dispatcher_ptr(& d)
             , _module_ptr(std::move(m))
@@ -319,6 +332,7 @@ struct modulus2
             assert(_module_ptr);
             _module_ptr->set_dispatcher(& d);
             _module_ptr->set_name(name);
+            _module_ptr->set_path(path);
 
             _dispatcher_ptr->log_trace(tr::f_("Declare emitters for module: {}"
                 , this->name()));
@@ -333,6 +347,11 @@ struct modulus2
         string_type const & parent_name () const
         {
             return _parent_name;
+        }
+
+        string_type const & path () const
+        {
+            return _module_ptr->path();
         }
 
         basic_module * module ()
@@ -583,6 +602,7 @@ struct modulus2
         bool register_module_helper (
               string_type const & name
             , string_type const & parent_name
+            , string_type const & path
             , module_pointer && m)
         {
             this->module_about_to_register(name);
@@ -617,7 +637,8 @@ struct modulus2
                 }
             }
 
-            module_context ctx {*this, name, parent_name, std::forward<module_pointer>(m)};
+            module_context ctx {*this, name, parent_name, path
+                , std::forward<module_pointer>(m)};
 
             auto ctx_it = _module_specs.find(ctx.name());
 
@@ -640,7 +661,7 @@ struct modulus2
                 assert(emplaced_module.second);
                 auto & ctx = emplaced_module.first->second;
 
-                log_debug(tr::f_("{}: registered", ctx.name()));
+                log_debug(tr::f_("{}: registered ({})", ctx.name(), ctx.path()));
 
                 // Notify external subscribers
                 this->module_registered(ctx.name());
@@ -975,6 +996,7 @@ struct modulus2
         {
             return register_module_helper(name.first
                 , name.second
+                , std::string{}
                 , std::unique_ptr<ModuleClass, module_deleter>(
                       new ModuleClass(std::forward<Args>(args)...)
                     , module_deleter{}));
@@ -991,12 +1013,12 @@ struct modulus2
             bool success = false;
 
             for (auto & loader: _loaders) {
-                auto m = loader->load_module_for_path(path, search_dirs);
+                auto res = loader->load_module_for_path(path, search_dirs);
 
-                if (m) {
+                if (res.first) {
                     found = true;
                     success = register_module_helper(name.first
-                        , name.second, std::move(m));
+                        , name.second, res.second, std::move(res.first));
                     break;
                 }
             }
@@ -1019,12 +1041,12 @@ struct modulus2
             bool success = false;
 
             for (auto & loader: _loaders) {
-                auto m = loader->load_module_for_name(basename, search_dirs);
+                auto res = loader->load_module_for_name(basename, search_dirs);
 
-                if (m) {
+                if (res.first) {
                     found = true;
                     success = register_module_helper(name.first
-                        , name.second, std::move(m));
+                        , name.second, res.second, std::move(res.first));
                     break;
                 }
             }
