@@ -22,7 +22,7 @@
 #   include "spdlog/sinks/android_sink.h"
 #endif
 
-using modulus2_t = modulus::modulus2<modulus::spdlog_logger>;
+using modulus2_t = modulus::modulus2<modulus::spdlog_logger, modulus::null_settings>;
 namespace fs = pfs::filesystem;
 
 class m1 : public modulus2_t::regular_module
@@ -64,7 +64,7 @@ int main ()
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
     sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(
-        fs::utf8_encode(fs::temp_directory_path() 
+        fs::utf8_encode(fs::temp_directory_path()
             / PFS__LITERAL_PATH("modulus2_spdlog_logger_demo.log"))
         , 23, 59));
 
@@ -79,7 +79,7 @@ int main ()
     modulus::spdlog_logger logger {logger_backend};
     logger.set_level(spdlog::level::trace);
 
-    modulus2_t::dispatcher d{logger};
+    modulus2_t::dispatcher d{std::move(logger), modulus::null_settings{}};
     modulus::platform_quit_plugin quit_plugin;
 
     d.attach_plugin(quit_plugin);

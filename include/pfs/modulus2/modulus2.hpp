@@ -1,23 +1,24 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2022 Vladislav Trifochkin
+// Copyright (c) 2019-2023 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
 // This file is part of `modulus2-lib`.
 //
 // Changelog:
-//      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
+//      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus).
+//      2023.02.09 Settings is a template parameter now (not a plugin).
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "pfs/modulus2/plugins/loader.hpp"
 #include "pfs/modulus2/plugins/module_lifetime.hpp"
 #include "pfs/modulus2/plugins/quit.hpp"
-#include "pfs/modulus2/plugins/settings.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/filesystem.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/i18n.hpp"
 #include "pfs/memory.hpp"
+#include "pfs/string_view.hpp"
 #include "pfs/timer_pool.hpp"
 #include <map>
 #include <string>
@@ -28,11 +29,53 @@
 
 namespace modulus {
 
+/**
+ * Requirements for SettingsType (see null_settings for example)
+ *
+ * class SettingsType {
+ * public:
+ *      void set (std::string const & key, INTEGRAL_TYPE value);
+ *      void set (std::string const & key, FLOATING_POINT value);
+ *      void set (std::string const & key, std::string const & value);
+ *      void set (std::string const & key, pfs::string_view value);
+ *      void set (std::string const & key, char const * value);
+ *      T get (std::string const & key, T const & default_value) const;
+ *      T take (std::string const & key, T const & default_value);
+ *      void remove (std::string const & key);
+ * };
+ */
+
+class null_settings
+{
+public:
+    template <typename T>
+    typename std::enable_if<std::is_integral<T>::value, void>::type
+    set (std::string const & key, T value) {}
+
+    template <typename T>
+    typename std::enable_if<std::is_floating_point<T>::value, void>::type
+    set (std::string const & key, T value) {}
+
+    void set (std::string const & key, std::string const & value) {}
+    void set (std::string const & key, pfs::string_view value) {}
+    void set (std::string const & key, char const * value) {}
+
+    template <typename T>
+    T get (std::string const & key, T const & default_value) const {}
+
+    template <typename T>
+    T take (std::string const & key, T const & default_value) {}
+
+    void remove (std::string const & key) {}
+};
+
 template <typename LoggerType
+    , typename SettingsType
     , typename ApiIdType = int>
 struct modulus2
 {
     using logger_type = LoggerType;
+    using settings_type = SettingsType;
     using api_id_type = ApiIdType;
     using string_type = std::string;
     using timer_id = pfs::timer_pool::timer_id;
@@ -126,17 +169,6 @@ struct modulus2
         friend class dispatcher;
         friend class module_context;
 
-//     public:
-//         using emitter_mapper_pair = modulus::emitter_mapper_pair;
-//
-//         // MSVC do not want 'detector_mapper_pair' definition in upper level, so duplicate here
-//         typedef struct { int id; detector_handler detector; } detector_mapper_pair;
-//         //using detector_mapper_pair = modulus::detector_mapper_pair;
-//
-//         using detector_handler = modulus::detector_handler;
-//         using thread_function = int (basic_module::*)(settings_type const &);
-//         //using thread_function = modulus::thread_function;
-//
     protected:
         string_type _name;
         std::string _path; // May be local filesystem path, URI or any other
@@ -494,13 +526,14 @@ struct modulus2
 
         string_type _main_thread_module; // Contains name of the module that
                                          // must be run in "main" thread
-        logger_type * _logger_ptr{nullptr};
+        logger_type _logger;
+        settings_type _settings;
 
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
 
-        null_settings_plugin _null_settings_plugin;
-        abstract_settings_plugin * _settings_plugin {nullptr};
+        //null_settings_plugin _null_settings_plugin;
+        //abstract_settings_plugin * _settings_plugin {nullptr};
 
     private:
         struct timer_callback_helper
@@ -588,7 +621,7 @@ struct modulus2
             , basic_module const * m
             , string_type const & s)
         {
-            (_logger_ptr->*log)(m ? m->name() + ": " + s : s);
+            (_logger.*log)(m ? m->name() + ": " + s : s);
         }
 
         // Logger backend for queued printing
@@ -596,7 +629,7 @@ struct modulus2
             , basic_module const * m
             , string_type const & s)
         {
-            _q.push(log, _logger_ptr, (m != 0 ? m->name() + ": " + s : s));
+            _q.push(log, & _logger, (m != 0 ? m->name() + ": " + s : s));
         }
 
         bool register_module_helper (
@@ -831,12 +864,11 @@ struct modulus2
         dispatcher (dispatcher &&) = delete;
         dispatcher & operator = (dispatcher &&) = delete;
 
-        dispatcher (logger_type & logger)
-            : _logger_ptr(& logger)
+        dispatcher (logger_type && logger, settings_type && settings)
+            : _logger(std::move(logger))
+            , _settings(std::move(settings))
             , _log_printer(& dispatcher::direct_print)
-        {
-            _settings_plugin = & _null_settings_plugin;
-        }
+        {}
 
         virtual ~dispatcher ()
         {
@@ -890,30 +922,18 @@ struct modulus2
             _loaders.push_back(& plugin);
             plugin.failure.connect(*this, & dispatcher::log_error);
 
-//             load_module.connect(plugin, plugin_type::on_load_module);
-//             plugin.module_ready.connect(*this, & dispatcher::on_module_ready);
+            // load_module.connect(plugin, plugin_type::on_load_module);
+            // plugin.module_ready.connect(*this, & dispatcher::on_module_ready);
         }
 
-        void attach_plugin (abstract_settings_plugin & plugin)
+        settings_type & settings ()
         {
-            if (_settings_plugin) {
-                _settings_plugin->failure_printer.disconnect_all();
-                _settings_plugin->success_printer.disconnect_all();
-            }
-
-            _settings_plugin = & plugin;
-            _settings_plugin->failure_printer.connect(*this, & dispatcher::log_error);
-            _settings_plugin->success_printer.connect(*this, & dispatcher::log_info);
+            return _settings;
         }
 
-        abstract_settings_plugin & settings ()
+        settings_type const & settings () const
         {
-            return *_settings_plugin;
-        }
-
-        abstract_settings_plugin const & settings () const
-        {
-            return *_settings_plugin;
+            return _settings;
         }
 
     ////////////////////////////////////////////////////////////////////////////

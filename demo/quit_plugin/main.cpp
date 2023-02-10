@@ -16,18 +16,17 @@
 #include <thread>
 #include <iostream>
 
-using modulus2_t = modulus::modulus2<modulus::iostream_logger>;
+using modulus2_t = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
 
 int main ()
 {
     using exit_status = modulus2_t::exit_status;
 
     int timeout = 5; // seconds
-    modulus::iostream_logger logger;
     modulus::timer_quit_plugin timer_quit_plugin {timeout};
     modulus::platform_quit_plugin quit_plugin;
 
-    modulus2_t::dispatcher d{logger};
+    modulus2_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
 
     d.attach_plugin(timer_quit_plugin);
     d.attach_plugin(quit_plugin);

@@ -14,8 +14,8 @@
 #include "pfs/modulus2/iostream_logger.hpp"
 #include "pfs/modulus2/plugins/timer_quit.hpp"
 
-using modulus2_type = modulus::modulus2<modulus::iostream_logger>;
 using namespace modulus;
+using modulus2_type = modulus2<iostream_logger, null_settings>;
 
 std::atomic_int __timer_counter {0};
 
@@ -432,8 +432,7 @@ private:
 TEST_CASE("Modulus2 basics") {
 
     using exit_status = modulus2_type::exit_status;
-    iostream_logger logger;
-    modulus2_type::dispatcher d{logger};
+    modulus2_type::dispatcher d{iostream_logger{}, null_settings{}};
 
     int timeout = 2; // seconds
     timer_quit_plugin timer_quit_plugin {timeout};

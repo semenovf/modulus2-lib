@@ -13,17 +13,16 @@
 #include "pfs/modulus2/plugins/platform_quit.hpp"
 #include "pfs/modulus2/plugins/dl_loader.hpp"
 
-using modulus2_type = modulus::modulus2<modulus::iostream_logger>;
+using modulus2_type = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
 
 int main ()
 {
     using exit_status = modulus2_type::exit_status;
 
-    modulus::iostream_logger logger;
     modulus::platform_quit_plugin quit_plugin;
     modulus::dl_loader_plugin<modulus2_type> dl_loader_plugin;
 
-    modulus2_type::dispatcher d{logger};
+    modulus2_type::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
 
     d.attach_plugin(quit_plugin);
     d.attach_plugin(dl_loader_plugin);

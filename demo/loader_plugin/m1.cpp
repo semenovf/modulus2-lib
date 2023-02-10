@@ -11,7 +11,7 @@
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
 
-using modulus2 = modulus::modulus2<modulus::iostream_logger>;
+using modulus2 = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
 
 class m1 : public modulus2::regular_module
 {

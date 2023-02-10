@@ -37,7 +37,7 @@ public:
                         return _terminate;
                     });
 
-                this->quit(); // Emit quit signal
+                this->quit(-1);
 
                 if (reason == false)
                     _timedout = true; // Timed out

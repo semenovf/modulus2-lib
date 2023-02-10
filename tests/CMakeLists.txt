@@ -13,7 +13,7 @@ project(modulus2-TESTS CXX C)
 list(APPEND TESTS
     modulus2basic
     mangling
-    settings_plugin)
+    settings)
 
 foreach (t ${TESTS})
     portable_target(ADD_TEST ${t}
