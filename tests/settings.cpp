@@ -20,10 +20,6 @@
 #include "pfs/debby/backend/in_memory/map.hpp"
 #include <limits>
 
-#if MODULUS2__ROCKSDB_ENABLED
-#   include "pfs/modulus2/plugins/rocksdb_settings.hpp"
-#endif
-
 using settings_t = debby::settings<debby::backend::in_memory::map_st>;
 using modulus2_t = modulus::modulus2<modulus::iostream_logger, settings_t>;
 
