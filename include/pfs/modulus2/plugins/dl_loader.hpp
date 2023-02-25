@@ -115,7 +115,7 @@ protected:
             // This is a critical section, so log output must not depends on logger
 #if ANDROID
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
-                , "%s\n", ex.what().c_str());
+                , "%s\n", ex.what());
 #else
             fmt::print(stderr, "{}\n", ex.what());
 #endif
