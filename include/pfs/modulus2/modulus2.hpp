@@ -299,6 +299,15 @@ struct modulus2
             return this->get_dispatcher().settings();
         }
 
+        template <typename F, typename ...Args>
+        void enqueue (F && f, Args &&... args)
+        {
+            auto * q = this->queue();
+
+            if (q)
+                q->template push(std::forward<F>(f), std::forward<Args>(args)...);
+        }
+
     protected:
         /**
          * Module's on_start() method called after loading and connection
@@ -519,8 +528,8 @@ struct modulus2
         std::unique_ptr<timer_pool_type> _timer_pool_ptr;
         module_context_map_type          _module_specs;
 
-        intmax_t _wait_period {10000}; // wait period in microseconds
-                                       // (default is 10 milliseconds)
+        intmax_t _wait_period {500000}; // wait period in microseconds
+                                       // (default is 500 milliseconds)
 
         std::atomic_int _quit_flag {0};
 
@@ -1280,9 +1289,9 @@ struct modulus2
             _q.wait();
         }
 
-        void wait_for (std::chrono::microseconds microseconds)
+        bool wait_for (std::chrono::microseconds microseconds)
         {
-            _q.wait_for(microseconds.count());
+            return _q.wait_for(microseconds.count());
         }
 
     public:
