@@ -20,6 +20,7 @@
 #include "pfs/memory.hpp"
 #include "pfs/string_view.hpp"
 #include "pfs/timer_pool.hpp"
+#include <cstddef>
 #include <map>
 #include <string>
 #include <thread>
@@ -124,6 +125,12 @@ struct modulus2
         virtual ~default_module_deleter () {}
     };
 
+    struct dummy_module_deleter: public basic_module_deleter
+    {
+        void operator () (basic_module *) const override {}
+        virtual ~dummy_module_deleter () {}
+    };
+
     struct module_deleter
     {
         std::shared_ptr<basic_module_deleter> deleter;
@@ -137,6 +144,11 @@ struct modulus2
 
         explicit module_deleter (std::shared_ptr<basic_module_deleter> d)
             : deleter(d)
+        {}
+
+        // Used by static (pre-defined) module registration.
+        explicit module_deleter (std::nullptr_t d)
+            : deleter(new dummy_module_deleter)
         {}
 
         void operator () (basic_module * m) const
@@ -1029,6 +1041,18 @@ struct modulus2
                 , std::unique_ptr<ModuleClass, module_deleter>(
                       new ModuleClass(std::forward<Args>(args)...)
                     , module_deleter{}));
+        }
+
+        /**
+         * Register static (pre-defined) module
+         */
+        template <typename ModuleClass>
+        bool register_static_module (module_name_type const & name, ModuleClass * m)
+        {
+            return register_module_helper(name.first
+                , name.second
+                , std::string{}
+                , std::unique_ptr<ModuleClass, module_deleter>(m, module_deleter{nullptr}));
         }
 
         /**
