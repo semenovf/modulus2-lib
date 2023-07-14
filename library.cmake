@@ -35,7 +35,9 @@ if (MODULUS2__ENABLE_SPDLOG)
         set(MODULUS2__SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/spdlog" CACHE INTERNAL "")
     endif()
 
-    portable_target(INCLUDE_PROJECT ${CMAKE_CURRENT_LIST_DIR}/cmake/Spdlog.cmake)
+    if (NOT TARGET spdlog)
+        portable_target(INCLUDE_PROJECT ${CMAKE_CURRENT_LIST_DIR}/cmake/Spdlog.cmake)
+    endif()
 endif()
 
 if (MODULUS2__ENABLE_SPDLOG)
