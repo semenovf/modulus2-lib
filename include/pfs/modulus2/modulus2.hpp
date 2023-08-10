@@ -891,6 +891,11 @@ struct modulus2
             , _log_printer(& dispatcher::direct_print)
         {}
 
+        dispatcher (logger_type && logger)
+            : _logger(std::move(logger))
+            , _log_printer(& dispatcher::direct_print)
+        {}
+
         virtual ~dispatcher ()
         {
             unregister_all();
