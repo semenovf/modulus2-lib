@@ -7,8 +7,10 @@
 //
 // Changelog:
 //      2021.07.10 Initial version.
+//      2023.08.30 Added bundle class for use while module construction.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "pfs/modulus2/bundle.hpp"
 #include "pfs/emitter.hpp"
 #include "pfs/filesystem.hpp"
 #include <string>
@@ -31,9 +33,9 @@ public:
 
 public:
     virtual std::pair<module_pointer, std::string> load_module_for_path (fs::path const & path
-        , std::list<fs::path> const & search_dirs) = 0;
+        , std::list<fs::path> const & search_dirs, bundle const & args = bundle{}) = 0;
     virtual std::pair<module_pointer, std::string> load_module_for_name (std::string const & name
-        , std::list<fs::path> const & search_dirs) = 0;
+        , std::list<fs::path> const & search_dirs, bundle const & args = bundle{}) = 0;
 
 public:
     loader_plugin () = default;

@@ -8,4 +8,7 @@
 ################################################################################
 add_subdirectory(quit_plugin)
 add_subdirectory(loader_plugin)
-add_subdirectory(spdlog_logger)
+
+if (MODULUS2__ENABLE_SPDLOG)
+    add_subdirectory(spdlog_logger)
+endif()

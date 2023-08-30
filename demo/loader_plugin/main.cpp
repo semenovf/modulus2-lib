@@ -37,5 +37,11 @@ int main ()
 
     d.register_module_for_name(std::make_pair("m2", ""), "m2", search_paths);
 
+    modulus::bundle args;
+    args.put("boolean", true);
+    args.put("double", double{3.14});
+
+    d.register_module_for_name(std::make_pair("m3", ""), "m3", search_paths, args);
+
     return d.exec() == exit_status::success ? 0 : -1;
 }

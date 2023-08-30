@@ -7,6 +7,7 @@
 //
 // Changelog:
 //      2021.07.10 Initial version.
+//      2023.08.30 Added bundle class for use while module construction.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "loader.hpp"
@@ -52,24 +53,25 @@ protected:
 
 public:
     std::pair<module_pointer, std::string> load_module_for_path (fs::path const & path
-        , std::list<fs::path> const & search_dirs) override
+        , std::list<fs::path> const & search_dirs, bundle const & args = bundle{}) override
     {
-        return module_for_path(path, search_dirs.begin(), search_dirs.end());
+        return module_for_path(path, search_dirs.begin(), search_dirs.end(), args);
     }
 
     std::pair<module_pointer, std::string> load_module_for_name (std::string const & basename
-        , std::list<fs::path> const & search_dirs) override
+        , std::list<fs::path> const & search_dirs, bundle const & args = bundle{}) override
     {
-
-        return module_for_name(basename, search_dirs.begin(), search_dirs.end());
+        return module_for_name(basename, search_dirs.begin(), search_dirs.end(), args);
     }
 
 protected:
     template <typename ForwardPathIt>
     std::pair<module_pointer, std::string> module_for_path (fs::path const & path
-        , ForwardPathIt first, ForwardPathIt last)
+        , ForwardPathIt first, ForwardPathIt last
+        , bundle const & args = bundle{})
     {
         static char const * module_ctor_name = "__module_ctor__";
+        static char const * module_ctor_bundle_name = "__module_ctor_bundle__";
         static char const * module_dtor_name = "__module_dtor__";
 
         fs::path orig_path(path);
@@ -122,18 +124,41 @@ protected:
             return std::make_pair(module_pointer{nullptr, module_deleter{}}, std::string{});
         }
 
-        std::error_code ec;
-        auto module_ctor = dylib_ptr->resolve<basic_module_type*(void)>(module_ctor_name, ec);
+        bool ctor_bundle_expected = false;
+        std::error_code ec1;
+        std::error_code ec2;
+        auto module_ctor = dylib_ptr->resolve<basic_module_type*(void)>(module_ctor_name, ec1);
+        auto module_ctor_bundle = dylib_ptr->resolve<basic_module_type*(bundle const &)>(module_ctor_bundle_name, ec2);
 
-        if (ec) {
+        // Ctor with arguments preferred
+        if (!args.empty()) {
+            ctor_bundle_expected = true;
+        } else {
+            if (!ec2)
+                ctor_bundle_expected = true;
+            else
+                ctor_bundle_expected = false;
+        }
+
+        if (ctor_bundle_expected && ec2) {
             this->failure(tr::f_("{}: failed to resolve constructor `{}' for module: {}"
                 , fs::utf8_encode(dylib_path)
-                , std::string(module_ctor_name)
-                , ec.message()));
+                , std::string(module_ctor_bundle_name)
+                , ec2.message()));
 
             return std::make_pair(module_pointer{nullptr, module_deleter{}}, std::string{});
         }
 
+        if (!ctor_bundle_expected && ec1) {
+            this->failure(tr::f_("{}: failed to resolve constructor `{}' for module: {}"
+                , fs::utf8_encode(dylib_path)
+                , std::string(module_ctor_name)
+                , ec1.message()));
+
+            return std::make_pair(module_pointer{nullptr, module_deleter{}}, std::string{});
+        }
+
+        std::error_code ec;
         auto module_dtor = dylib_ptr->resolve<void(basic_module_type*)>(module_dtor_name, ec);
 
         if (ec) {
@@ -145,7 +170,9 @@ protected:
             return std::make_pair(module_pointer{nullptr, module_deleter{}}, std::string{});
         }
 
-        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = module_ctor();
+        decltype(& *module_pointer{nullptr, module_deleter{}}) ptr = ctor_bundle_expected
+            ? module_ctor_bundle(args)
+            : module_ctor();
 
         if (!ptr)
             std::make_pair(module_pointer{nullptr, module_deleter{}}, std::string{});
@@ -157,10 +184,11 @@ protected:
 
     template <typename ForwardPathIt>
     std::pair<module_pointer, std::string> module_for_name (std::string const & basename
-        , ForwardPathIt first, ForwardPathIt last)
+        , ForwardPathIt first, ForwardPathIt last
+        , bundle const & args = bundle{})
     {
         auto modpath = pfs::dynamic_library::build_filename(basename);
-        return module_for_path<ForwardPathIt>(modpath, first, last);
+        return module_for_path<ForwardPathIt>(modpath, first, last, args);
     }
 };
 

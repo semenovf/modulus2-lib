@@ -1065,13 +1065,14 @@ struct modulus2
          */
         bool register_module_for_path (module_name_type const & name
             , string_type const & path
-            , std::list<fs::path> const & search_dirs = std::list<fs::path>{})
+            , std::list<fs::path> const & search_dirs = std::list<fs::path>{}
+            , bundle const & args = bundle{})
         {
             bool found = false;
             bool success = false;
 
             for (auto & loader: _loaders) {
-                auto res = loader->load_module_for_path(path, search_dirs);
+                auto res = loader->load_module_for_path(path, search_dirs, args);
 
                 if (res.first) {
                     found = true;
@@ -1093,13 +1094,14 @@ struct modulus2
          */
         bool register_module_for_name (module_name_type const & name
             , string_type const & basename
-            , std::list<fs::path> const & search_dirs = std::list<fs::path>{})
+            , std::list<fs::path> const & search_dirs = std::list<fs::path>{}
+            , bundle const & args = bundle{})
         {
             bool found = false;
             bool success = false;
 
             for (auto & loader: _loaders) {
-                auto res = loader->load_module_for_name(basename, search_dirs);
+                auto res = loader->load_module_for_name(basename, search_dirs, args);
 
                 if (res.first) {
                     found = true;

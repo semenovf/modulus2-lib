@@ -1,6 +1,6 @@
 [submodule "3rdparty/pfs/common"]
 	path = 3rdparty/pfs/common
-	url = https://github.com/semenovf/common-lib.git
+        url = git@github.com:semenovf/common-lib.git
 [submodule "3rdparty/spdlog"]
 	path = 3rdparty/spdlog
 	url = https://github.com/gabime/spdlog.git
