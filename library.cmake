@@ -16,7 +16,7 @@ option(MODULUS2__ENABLE_DEBBY "Enable `debby-lib` library for settings backends"
 
 portable_target(ADD_INTERFACE ${PROJECT_NAME} ALIAS pfs::modulus2)
 portable_target(INCLUDE_DIRS ${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
-portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::common pfs::debby)
+portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::common)
 
 if (NOT TARGET pfs::common)
     portable_target(INCLUDE_PROJECT
@@ -24,9 +24,15 @@ if (NOT TARGET pfs::common)
 endif()
 
 if (MODULUS2__ENABLE_DEBBY)
-    if (NOT TARGET pfs::debby)
+    if (NOT TARGET pfs::debby AND NOT TARGET pfs::debby::static)
         portable_target(INCLUDE_PROJECT
             ${CMAKE_CURRENT_LIST_DIR}/3rdparty/pfs/debby/library.cmake)
+    endif()
+
+    if (TARGET pfs::debby)
+        portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::debby)
+    elsif (TARGET pfs::debby::static)
+        portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::debby::static)
     endif()
 endif()
 
