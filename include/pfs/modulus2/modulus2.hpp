@@ -13,7 +13,9 @@
 #include "pfs/modulus2/plugins/loader.hpp"
 #include "pfs/modulus2/plugins/module_lifetime.hpp"
 #include "pfs/modulus2/plugins/quit.hpp"
+#include "pfs/assert.hpp"
 #include "pfs/emitter.hpp"
+#include "pfs/error.hpp"
 #include "pfs/filesystem.hpp"
 #include "pfs/function_queue.hpp"
 #include "pfs/i18n.hpp"
@@ -768,20 +770,17 @@ struct modulus2
                 } else {
                     auto module_ptr = runnable_it->second.module();
 
-                    assert(module_ptr);
+                    PFS__ASSERT(module_ptr != nullptr, "");
 
                     if (!module_ptr->is_runnable()) {
-                        log_error(tr::f_("Module [{}] must be runnable"
-                            , module_ptr->name()));
+                        log_error(tr::f_("Module [{}] must be runnable", module_ptr->name()));
                         r = exit_status::failure;
                     } else {
                         if (!module_ptr->on_start()) {
                             r = exit_status::failure;
-                            log_error(tr::f_("Module [{}] start failure"
-                                , module_ptr->name()));
+                            log_error(tr::f_("Module [{}] start failure", module_ptr->name()));
                         } else {
-                            log_trace(tr::f_("Module [{}] started successfully"
-                                , module_ptr->name()));
+                            log_trace(tr::f_("Module [{}] started successfully", module_ptr->name()));
                         }
                     }
                 }
@@ -794,17 +793,15 @@ struct modulus2
 
                         auto module_ptr = ctx.second.module();
 
-                        assert(module_ptr);
+                        PFS__ASSERT(module_ptr != nullptr, "");
 
                         if (module_ptr->is_guest()) {
                             if (!module_ptr->on_start()) {
                                 r = exit_status::failure;
-                                log_error(tr::f_("Module [{}] start failure"
-                                    , module_ptr->name()));
+                                log_error(tr::f_("Module [{}] start failure", module_ptr->name()));
                                 break;
                             } else {
-                                log_trace(tr::f_("Module [{}] started successfully"
-                                    , module_ptr->name()));
+                                log_trace(tr::f_("Module [{}] started successfully", module_ptr->name()));
                             }
                         }
                     }
@@ -1160,7 +1157,7 @@ struct modulus2
             // Check if "main" module exists
             if (!_main_thread_module.empty()) {
                 if (_module_specs.find(_main_thread_module) == _module_specs.end()) {
-                    log_error(tr::f_("Module [{}] specified as \"main\" module not found"
+                    log_error(tr::f_("module [{}] specified as \"main\" module not found"
                         , _main_thread_module));
                     return exit_status::failure;
                 }
@@ -1169,49 +1166,57 @@ struct modulus2
             // If has module to be run in "main" thread, run dispatcher in
             // self thread
             if (!_main_thread_module.empty()) {
-                thread_pool.emplace_back(& dispatcher::runnable_main
-                    , this
-                    , string_type(""));
+                thread_pool.emplace_back(& dispatcher::runnable_main, this, string_type(""));
             }
 
             for (auto & ctx: _module_specs) {
                 auto module_ptr = ctx.second.module();
 
                 if (module_ptr->runnable()) {
-                    log_trace(tr::f_("Module [{}] is runnable"
-                        , module_ptr->name()));
+                    log_trace(tr::f_("module [{}] is runnable", module_ptr->name()));
 
                     if (_main_thread_module == module_ptr->name()) {
-                        log_trace(tr::f_("Module [{}] will be run in \"main\" thread"
+                        log_trace(tr::f_("module [{}] will be run in \"main\" thread"
                             , module_ptr->name()));
 
                         // Launching is below
                     } else {
-                        thread_pool.emplace_back(& dispatcher::runnable_main
-                            , this
-                            , module_ptr->name());
+                        thread_pool.emplace_back(& dispatcher::runnable_main, this, module_ptr->name());
                     }
                 } else if (module_ptr->is_regular()) {
-                    log_trace(tr::f_("Module [{}] is regular"
+                    log_trace(tr::f_("module [{}] is regular"
                         , module_ptr->name()));
 
                     if (!module_ptr->on_start()) {
                         r = exit_status::failure;
-                        log_error(tr::f_("Module [{}] start failure"
-                            , module_ptr->name()));
+                        log_error(tr::f_("module [{}] start failure", module_ptr->name()));
                     } else {
-                            log_trace(tr::f_("Module [{}] started successfully"
-                                , module_ptr->name()));
+                        log_trace(tr::f_("module [{}] started successfully", module_ptr->name()));
                     }
                 } else {
-                    log_trace(tr::f_("Module [{}] is guest", module_ptr->name()));
+                    log_trace(tr::f_("module [{}] is guest", module_ptr->name()));
                 }
             }
 
-            // Launch dispatcher or "main" module (according to
-            // _main_thread_module value)
-            if (r == exit_status::success)
-                r = runnable_main(_main_thread_module);
+            // Launch dispatcher or "main" module (according to _main_thread_module value)
+            if (r == exit_status::success) {
+                std::string exception_string;
+
+                try {
+                    r = runnable_main(_main_thread_module);
+                } catch (pfs::error const & ex) {
+                    exception_string = ex.what();
+                } catch (std::exception const & ex) {
+                    exception_string = ex.what();
+                } catch (...) {
+                    exception_string = tr::_("unknown");
+                }
+
+                if (!exception_string.empty()) {
+                    log_error(tr::_("application terminating by exception: {}", exception_string));
+                    this->quit();
+                }
+            }
 
             for (auto & th: thread_pool) {
                 if (th.joinable())
