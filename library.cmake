@@ -31,7 +31,7 @@ if (MODULUS2__ENABLE_DEBBY)
 
     if (TARGET pfs::debby)
         portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::debby)
-    elsif (TARGET pfs::debby::static)
+    elseif (TARGET pfs::debby::static)
         portable_target(LINK ${PROJECT_NAME} INTERFACE pfs::debby::static)
     endif()
 endif()
