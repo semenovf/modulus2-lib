@@ -1213,7 +1213,7 @@ struct modulus2
                 }
 
                 if (!exception_string.empty()) {
-                    log_error(tr::_("application terminating by exception: {}", exception_string));
+                    log_error(tr::f_("application terminating by exception: {}", exception_string));
                     this->quit();
                 }
             }
