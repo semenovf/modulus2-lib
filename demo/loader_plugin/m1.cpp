@@ -14,7 +14,7 @@
 
 using modulus2 = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
 
-class m1 : public modulus2::regular_module
+class m1 : public modulus2::runnable_module
 {
 
 private:
@@ -44,6 +44,11 @@ public:
     {
         log_debug("m1::on_finish()");
         return true;
+    }
+
+    modulus2::exit_status run () override
+    {
+        return modulus2::exit_status::success;
     }
 };
 

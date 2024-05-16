@@ -368,8 +368,7 @@ struct modulus2
             , string_type const & ename  // emitter owner name
             , string_type const & dname) // detector owner name
         {
-            _dispatcher_ptr->log_trace(tr::f_("\tEmitter [{}]"
-                " of module [{}]"
+            _dispatcher_ptr->log_trace(tr::f_("\tEmitter [{}] of module [{}]"
                 " connected with corresponding detector of module [{}]"
                 , id, ename, dname));
         }
@@ -389,8 +388,7 @@ struct modulus2
             _module_ptr->set_name(name);
             _module_ptr->set_path(path);
 
-            _dispatcher_ptr->log_trace(tr::f_("Declare emitters for module: {}"
-                , this->name()));
+            _dispatcher_ptr->log_trace(tr::f_("Declare emitters for module: {}", this->name()));
             _module_ptr->declare_emitters(*this);
         }
 
@@ -421,8 +419,7 @@ struct modulus2
         template <typename ...Args>
         void declare_emitter (api_id_type id, emitter_type<Args...> & em)
         {
-            _dispatcher_ptr->log_trace(tr::f_("\tCaching emitter [{}] for {}"
-                , id, this->name()));
+            _dispatcher_ptr->log_trace(tr::f_("\tCaching emitter [{}] for {}", id, this->name()));
             _emitter_cache.emplace(id, reinterpret_cast<basic_emitter_type *>(& em));
         }
 
@@ -498,8 +495,7 @@ struct modulus2
                 em.second->disconnect_all();
             }
 
-            _dispatcher_ptr->log_trace(tr::f_("emitters disconnected for [{}]"
-                , _module_ptr->name()));
+            _dispatcher_ptr->log_trace(tr::f_("emitters disconnected for [{}]", _module_ptr->name()));
         }
 
     }; // module_context
@@ -555,9 +551,6 @@ struct modulus2
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
 
-        //null_settings_plugin _null_settings_plugin;
-        //abstract_settings_plugin * _settings_plugin {nullptr};
-
     private:
         struct timer_callback_helper
         {
@@ -589,9 +582,7 @@ struct modulus2
                 timer_callback_helper timer_callback;
                 timer_callback.callback_queue = callback_queue;
                 timer_callback.callback = std::move(callback);
-                timer_callback.timerid = _timer_pool_ptr->create(period
-                    , period
-                    , std::move(timer_callback));
+                timer_callback.timerid = _timer_pool_ptr->create(period, period, std::move(timer_callback));
 
                 return timer_callback.timerid;
             }
@@ -615,8 +606,7 @@ struct modulus2
                 timer_callback_helper timer_callback;
                 timer_callback.callback_queue = callback_queue;
                 timer_callback.callback = std::move(callback);
-                timer_callback.timerid = _timer_pool_ptr->create(timeout
-                    , std::move(timer_callback));
+                timer_callback.timerid = _timer_pool_ptr->create(timeout, std::move(timer_callback));
 
                 return timer_callback.timerid;
             }
@@ -674,8 +664,7 @@ struct modulus2
                     auto parent_it = _module_specs.find(parent_name);
 
                     if (parent_it == _module_specs.end()) {
-                        log_error(tr::f_(
-                            "Parent module [{}] not found for module [{}]"
+                        log_error(tr::f_("Parent module [{}] not found for module [{}]"
                             , parent_name, name));
                         return false;
                     }
@@ -683,8 +672,7 @@ struct modulus2
                     auto q = parent_it->second.module()->queue();
 
                     if (! q) {
-                        log_error(tr::f_(
-                            "Parent module [{}] is not runnable or a guest module"
+                        log_error(tr::f_("Parent module [{}] is not runnable or a guest module"
                             , parent_name));
                         return false;
                     }
@@ -944,9 +932,6 @@ struct modulus2
         {
             _loaders.push_back(& plugin);
             plugin.failure.connect(*this, & dispatcher::log_error);
-
-            // load_module.connect(plugin, plugin_type::on_load_module);
-            // plugin.module_ready.connect(*this, & dispatcher::on_module_ready);
         }
 
         settings_type & settings ()
@@ -1184,8 +1169,7 @@ struct modulus2
                         thread_pool.emplace_back(& dispatcher::runnable_main, this, module_ptr->name());
                     }
                 } else if (module_ptr->is_regular()) {
-                    log_trace(tr::f_("module [{}] is regular"
-                        , module_ptr->name()));
+                    log_trace(tr::f_("module [{}] is regular", module_ptr->name()));
 
                     if (!module_ptr->on_start()) {
                         r = exit_status::failure;

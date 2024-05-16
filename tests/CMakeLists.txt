@@ -9,7 +9,6 @@
 ################################################################################
 project(modulus2-TESTS CXX C)
 
-
 list(APPEND TESTS
     modulus2basic
     mangling
@@ -19,5 +18,5 @@ foreach (t ${TESTS})
     portable_target(ADD_TEST ${t}
         ENABLE_COVERAGE ${DEBBY__ENABLE_COVERAGE}
         SOURCES ${t}.cpp ${${t}_SOURCES}
-        LINK pfs::modulus2 pfs::debby)
+        LINK pfs::modulus2)
 endforeach()
