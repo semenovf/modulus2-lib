@@ -1,0 +1,17 @@
+////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2024 Vladislav Trifochkin
+//
+// License: see LICENSE file
+//
+// This file is part of `modulus2-lib`.
+//
+// Changelog:
+//      2024.05.15 Initial version.
+////////////////////////////////////////////////////////////////////////////////
+#pragma once
+
+enum {
+      API_NOTHING = 0
+    , API_METHOD1
+    , API_METHOD2
+};

@@ -8,6 +8,7 @@
 // Changelog:
 //      2021.07.11 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
+#include "api.hpp"
 #include "pfs/modulus2/modulus2.hpp"
 #include "pfs/modulus2/iostream_logger.hpp"
 
@@ -15,6 +16,23 @@ using modulus2 = modulus::modulus2<modulus::iostream_logger, modulus::null_setti
 
 class m1 : public modulus2::regular_module
 {
+
+private:
+    modulus2::emitter_type<> emitMethod1;
+    modulus2::emitter_type<int> emitMethod2;
+
+public:
+    void declare_emitters (modulus2::module_context & ctx) override
+    {
+        ctx.declare_emitter(API_METHOD1, emitMethod1); // => bbridge
+        ctx.declare_emitter(API_METHOD2, emitMethod2); // => delivery
+    }
+
+    bool connect_detector (modulus2::api_id_type id, modulus2::module_context & ctx) override
+    {
+        return false;
+    }
+
 public:
     bool on_start () override
     {
