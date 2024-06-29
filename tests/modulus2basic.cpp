@@ -110,7 +110,7 @@ public:
         CHECK(_counter == 1);
     }
 
-    virtual void declare_emitters (modulus2_type::module_context & ctx) override
+    void declare_emitters (modulus2_type::module_context & ctx) override
     {
         ctx.declare_emitter(0, emitZeroArg);
         ctx.declare_emitter(1, emitOneArg);
@@ -122,7 +122,7 @@ public:
         ctx.declare_emitter(7, emitData);
     }
 
-    virtual bool connect_detector (modulus2_type::api_id_type id
+    bool connect_detector (modulus2_type::api_id_type id
         , modulus2_type::module_context & ctx) override
     {
         switch (id) {
@@ -172,7 +172,7 @@ public:
         CHECK(_counter == 8);
     }
 
-    virtual bool connect_detector (modulus2_type::api_id_type id
+    bool connect_detector (modulus2_type::api_id_type id
         , modulus2_type::module_context & ctx) override
     {
         switch (id) {
@@ -321,13 +321,13 @@ public:
         CHECK(_counter == 3);
     }
 
-    virtual void declare_emitters (modulus2_type::module_context & ctx) override
+    void declare_emitters (modulus2_type::module_context & ctx) override
     {
         ctx.declare_emitter(1, emitOneArg);
         ctx.declare_emitter(2, emitTwoArgs);
     }
 
-    virtual bool connect_detector (modulus2_type::api_id_type id
+    bool connect_detector (modulus2_type::api_id_type id
         , modulus2_type::module_context & ctx) override
     {
         switch (id) {
@@ -397,13 +397,13 @@ public:
         CHECK(_counter == 2);
     }
 
-    virtual void declare_emitters (modulus2_type::module_context & ctx) override
+    void declare_emitters (modulus2_type::module_context & ctx) override
     {
         ctx.declare_emitter(0, emitZeroArg);
         ctx.declare_emitter(1, emitOneArg);
     }
 
-    virtual bool connect_detector (modulus2_type::api_id_type id
+    bool connect_detector (modulus2_type::api_id_type id
         , modulus2_type::module_context & ctx) override
     {
         switch (id) {
@@ -429,8 +429,39 @@ private:
     }
 };
 
-TEST_CASE("Modulus2 basics") {
+//
+// For testing lambda as detector
+//
+class m6 : public modulus2_type::guest_module
+{
+    int _counter = 0;
 
+public:
+    m6 () {}
+
+    ~m6 ()
+    {
+        CHECK(_counter == 2);
+    }
+
+    bool connect_detector (modulus2_type::api_id_type id, modulus2_type::module_context & ctx) override
+    {
+        switch (id) {
+            case 0:
+                return ctx.connect_detector(id, *this, [this] () {
+                    _counter++;
+                });
+            case 1:
+                return ctx.connect_detector(id, *this, [this] (bool) {
+                    _counter++;
+                });
+        }
+
+        return false;
+    }
+};
+
+TEST_CASE("Modulus2 basics") {
     using exit_status = modulus2_type::exit_status;
     modulus2_type::dispatcher d{iostream_logger{}, null_settings{}};
 
@@ -445,8 +476,9 @@ TEST_CASE("Modulus2 basics") {
     CHECK(d.register_module<m3>(std::make_pair("m3", ""), 43, "hello"));
     CHECK(d.register_module<m4>(std::make_pair("m4", "m3")));
     CHECK(d.register_module<m5>(std::make_pair("m5", "")));
+    CHECK(d.register_module<m6>(std::make_pair("m6", "m3")));
 
-    CHECK(d.count() == 5);
+    CHECK(d.count() == 6);
 
     d.attach_plugin(timer_quit_plugin);
     CHECK(d.exec() == exit_status::success);

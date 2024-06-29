@@ -431,8 +431,7 @@ struct modulus2
          *         and connected to detector, @c false if otherwise.
          */
         template <typename ModuleClass, typename ...Args>
-        bool connect_detector (api_id_type id, ModuleClass & m
-            , void (ModuleClass::*f) (Args...))
+        bool connect_detector (api_id_type id, ModuleClass & m, void (ModuleClass::*f) (Args...))
         {
             auto it = _emitter_cache.find(id);
 
@@ -450,11 +449,41 @@ struct modulus2
             return false;
         }
 
+        template <typename F>
+        struct __emitter_traits: __emitter_traits<decltype(& F::operator())> {};
+
+        template <typename R, typename C, typename ...Args>
+        struct __emitter_traits<R (C::*) (Args...) const>
+        {
+            using type = emitter_type<Args...>;
+        };
+
+        template <typename ModuleClass, typename F>
+        bool connect_detector (api_id_type id, ModuleClass & m, F f)
+        {
+            auto it = _emitter_cache.find(id);
+
+            if (it != _emitter_cache.end()) {
+                using emitter_traits = __emitter_traits<F>;
+
+                auto em = reinterpret_cast<typename emitter_traits::type *>(it->second);
+
+                if (m.queue())
+                    em->connect(*m.queue(), f);
+                else
+                    em->connect(f);
+
+                return true;
+            }
+
+            return false;
+        }
+
+
     private:
         friend class dispatcher;
 
-        void connect_emitters (typename map_type::iterator first
-            , typename map_type::iterator last)
+        void connect_emitters (typename map_type::iterator first, typename map_type::iterator last)
         {
             _dispatcher_ptr->log_trace(tr::_("Connecting emitters:"));
 
