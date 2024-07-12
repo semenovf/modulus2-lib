@@ -48,6 +48,7 @@ public:
 
     modulus2::exit_status run () override
     {
+        quit();
         return modulus2::exit_status::success;
     }
 };

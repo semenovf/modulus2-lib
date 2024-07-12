@@ -562,7 +562,6 @@ struct modulus2
         ////////////////////////////////////////////////////////////////////////
         std::vector<loader_plugin<modulus2> *> _loaders;
 
-    private:
         mutable function_queue_type      _q;
         std::unique_ptr<timer_pool_type> _timer_pool_ptr;
         module_context_map_type          _module_specs;
@@ -576,6 +575,10 @@ struct modulus2
                                          // must be run in "main" thread
         logger_type _logger;
         settings_type _settings;
+
+        // If true, the dispatcher ignores modules that return false in the on_start() method.
+        // Main runnable module cannot be ignored.
+        bool _ignore_module_on_start_failure {false};
 
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
@@ -750,7 +753,7 @@ struct modulus2
             auto is_runnable = module_ptr->runnable();
             auto name = module_ptr->name();
 
-            pos->disconnect_emitters();
+            pos->second.disconnect_emitters();
             auto result = _module_specs.erase(pos);
 
             log_debug(tr::f_("{}: unregistered", name));
@@ -761,7 +764,7 @@ struct modulus2
             if (is_runnable) {
                 for (auto it = _module_specs.begin(); it != _module_specs.end();) {
                     if (it->second.parent_name() == name) {
-                        it = unregister_module_helper(it->second.parent_name());
+                        it = unregister_module_helper(it/*->second.parent_name()*/);
                     } else {
                         ++it;
                     }
@@ -795,7 +798,7 @@ struct modulus2
                     } else {
                         if (!module_ptr->on_start()) {
                             r = exit_status::failure;
-                            log_error(tr::f_("Module [{}] start failure", module_ptr->name()));
+                            log_error(tr::f_("module [{}] start failure", module_ptr->name()));
                         } else {
                             log_trace(tr::f_("Module [{}] started successfully", module_ptr->name()));
                         }
@@ -805,6 +808,8 @@ struct modulus2
 
             // on_start() children
             if (r == exit_status::success) {
+                std::vector<std::string> on_start_failure_modules;
+
                 for (auto & ctx: _module_specs) {
                     if (ctx.second.parent_name() == name) {
 
@@ -814,15 +819,25 @@ struct modulus2
 
                         if (module_ptr->is_guest()) {
                             if (!module_ptr->on_start()) {
-                                r = exit_status::failure;
-                                log_error(tr::f_("Module [{}] start failure", module_ptr->name()));
-                                break;
+                                if (_ignore_module_on_start_failure) {
+                                    log_error(tr::f_("module [{}] start failure, ignored by settings"
+                                        " (ignore_module_on_start_failure)", module_ptr->name()));
+
+                                    on_start_failure_modules.push_back(module_ptr->name());
+                                } else {
+                                    log_error(tr::f_("module [{}] start failure", module_ptr->name()));
+                                    r = exit_status::failure;
+                                    break;
+                                }
                             } else {
                                 log_trace(tr::f_("Module [{}] started successfully", module_ptr->name()));
                             }
                         }
                     }
                 }
+
+                for (auto const & modname: on_start_failure_modules)
+                    unregister_module(modname);
             }
 
             // Run
@@ -913,6 +928,11 @@ struct modulus2
         virtual ~dispatcher ()
         {
             unregister_all();
+        }
+
+        void ignore_module_on_start_failure (bool enable)
+        {
+            _ignore_module_on_start_failure = enable;
         }
 
         /**
@@ -1128,7 +1148,6 @@ struct modulus2
             return found && success;
         }
 
-
         /**
          * Unregister module with children (if have last)
          *
@@ -1183,6 +1202,8 @@ struct modulus2
                 thread_pool.emplace_back(& dispatcher::runnable_main, this, string_type(""));
             }
 
+            std::vector<std::string> on_start_failure_modules;
+
             for (auto & ctx: _module_specs) {
                 auto module_ptr = ctx.second.module();
 
@@ -1201,8 +1222,15 @@ struct modulus2
                     log_trace(tr::f_("module [{}] is regular", module_ptr->name()));
 
                     if (!module_ptr->on_start()) {
-                        r = exit_status::failure;
-                        log_error(tr::f_("module [{}] start failure", module_ptr->name()));
+                        if (_ignore_module_on_start_failure) {
+                            log_error(tr::f_("module [{}] start failure, ignored by settings"
+                                " (ignore_module_on_start_failure)", module_ptr->name()));
+
+                            on_start_failure_modules.push_back(module_ptr->name());
+                        } else {
+                            log_error(tr::f_("module [{}] start failure", module_ptr->name()));
+                            r = exit_status::failure;
+                        }
                     } else {
                         log_trace(tr::f_("module [{}] started successfully", module_ptr->name()));
                     }
@@ -1210,6 +1238,9 @@ struct modulus2
                     log_trace(tr::f_("module [{}] is guest", module_ptr->name()));
                 }
             }
+
+            for (auto const & modname: on_start_failure_modules)
+                unregister_module(modname);
 
             // Launch dispatcher or "main" module (according to _main_thread_module value)
             if (r == exit_status::success) {

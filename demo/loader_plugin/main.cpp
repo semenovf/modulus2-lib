@@ -24,6 +24,9 @@ int main ()
 
     modulus2_type::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
 
+    // Module m4 will be ignored
+    d.ignore_module_on_start_failure(true);
+
     d.attach_plugin(quit_plugin);
     d.attach_plugin(dl_loader_plugin);
 
@@ -42,6 +45,8 @@ int main ()
     args.put("double", double{3.14});
 
     d.register_module_for_name(std::make_pair("m3", ""), "m3", search_paths, args);
+
+    d.register_module_for_name(std::make_pair("m4", ""), "m4", search_paths);
 
     return d.exec() == exit_status::success ? 0 : -1;
 }
