@@ -15,7 +15,7 @@
 
 using modulus2_type = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
 
-int main ()
+int main (int argc, char * argv[])
 {
     using exit_status = modulus2_type::exit_status;
 
@@ -48,5 +48,5 @@ int main ()
 
     d.register_module_for_name(std::make_pair("m4", ""), "m4", search_paths);
 
-    return d.exec() == exit_status::success ? 0 : -1;
+    return d.exec(argc, argv) == exit_status::success ? 0 : -1;
 }

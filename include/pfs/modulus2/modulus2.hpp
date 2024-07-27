@@ -583,6 +583,10 @@ struct modulus2
         void (dispatcher::*_log_printer) (void (logger_type::*)(string_type const &)
             , basic_module const * m, string_type const & s) = nullptr;
 
+        // Contains values passed to main () function.
+        int _argc {0};
+        char ** _argv {nullptr};
+
     private:
         struct timer_callback_helper
         {
@@ -1179,6 +1183,23 @@ struct modulus2
 ////////////////////////////////////////////////////////////////////////////////
 // Main execution loop
 ////////////////////////////////////////////////////////////////////////////////
+        int argc () const noexcept
+        {
+            return _argc;
+        }
+
+        char ** argv () const noexcept
+        {
+            return _argv;
+        }
+
+        exit_status exec (int argc, char * argv[])
+        {
+            _argc = argc;
+            _argv = argv;
+            return exec();
+        }
+
         exit_status exec ()
         {
             // Initialize timer pool
