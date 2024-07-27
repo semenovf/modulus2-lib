@@ -1188,6 +1188,11 @@ struct modulus2
             return _argc;
         }
 
+        int & argc () noexcept
+        {
+            return _argc;
+        }
+
         char ** argv () const noexcept
         {
             return _argv;
