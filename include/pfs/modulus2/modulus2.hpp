@@ -929,7 +929,7 @@ struct modulus2
             , _log_printer(& dispatcher::direct_print)
         {}
 
-        virtual ~dispatcher ()
+        ~dispatcher ()
         {
             unregister_all();
         }
