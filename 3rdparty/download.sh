@@ -3,7 +3,7 @@
 LOG_FILE='download.log'
 GIT_DOWNLOADER="git clone"
 
-SPDLOG_RELEASE=v1.x
+SPDLOG_RELEASE=v1.14.1
 
 # HTTPS
 HTTPS_SOURCES="--depth 1 -b ${SPDLOG_RELEASE} --single-branch https://github.com/gabime/spdlog.git spdlog"

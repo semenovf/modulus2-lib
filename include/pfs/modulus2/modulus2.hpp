@@ -319,7 +319,7 @@ struct modulus2
             auto * q = this->queue();
 
             if (q)
-                q->template push(std::forward<F>(f), std::forward<Args>(args)...);
+                q->push(std::forward<F>(f), std::forward<Args>(args)...);
         }
 
     protected:

@@ -13,3 +13,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     # For link custom shared libraries with spdlog static library
     target_compile_options(spdlog PRIVATE "-fPIC")
 endif()
+
+if (MSVC)
+    target_compile_options(spdlog PRIVATE "/utf-8")
+endif()
