@@ -9,11 +9,12 @@
 //      2021.06.27 Initial version
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "../namespace.hpp"
 #include <memory>
 #include <string>
 #include <thread>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 class module_lifetime_plugin
 {
@@ -50,4 +51,4 @@ public:
     }
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

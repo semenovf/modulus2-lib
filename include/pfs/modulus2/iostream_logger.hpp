@@ -9,9 +9,10 @@
 //      2021.05.20 Initial version (inherited from https://github.com/semenovf/pfs-modulus)
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "namespace.hpp"
 #include <iostream>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 class iostream_logger
 {
@@ -66,4 +67,4 @@ public:
     }
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

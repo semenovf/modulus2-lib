@@ -9,9 +9,10 @@
 //      2021.10.11 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "namespace.hpp"
 #include "spdlog/spdlog.h"
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 class spdlog_logger
 {
@@ -92,4 +93,4 @@ public:
     }
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

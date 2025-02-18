@@ -10,12 +10,13 @@
 //      2023.08.30 Added bundle class for use while module construction.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/modulus2/bundle.hpp"
-#include "pfs/emitter.hpp"
-#include "pfs/filesystem.hpp"
+#include "../namespace.hpp"
+#include "../bundle.hpp"
+#include <pfs/emitter.hpp>
+#include <pfs/filesystem.hpp>
 #include <string>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 namespace fs = pfs::filesystem;
 
@@ -47,4 +48,4 @@ public:
     loader_plugin & operator = (loader_plugin &&) = delete;
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

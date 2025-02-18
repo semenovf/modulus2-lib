@@ -9,11 +9,12 @@
 //      2023.08.30 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/unified_value.hpp"
+#include "namespace.hpp"
+#include <pfs/unified_value.hpp>
 #include <string>
 #include <unordered_map>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 class bundle
 {
@@ -65,5 +66,4 @@ public:
     }
 };
 
-} // namespace modulus
-
+MODULUS2__NAMESPACE_END

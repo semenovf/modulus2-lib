@@ -9,12 +9,13 @@
 //      2021.06.27 Initial version
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "../namespace.hpp"
 #include "quit.hpp"
 #include <condition_variable>
 #include <memory>
 #include <thread>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 class timer_quit_plugin : public quit_plugin
 {
@@ -65,4 +66,4 @@ public:
     }
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

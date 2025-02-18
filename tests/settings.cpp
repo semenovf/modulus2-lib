@@ -12,15 +12,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "pfs/filesystem.hpp"
-#include "pfs/memory.hpp"
-#include "pfs/modulus2/modulus2.hpp"
-#include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/debby/settings.hpp"
-#include "pfs/debby/backend/in_memory/map.hpp"
+#include <pfs/filesystem.hpp>
+#include <pfs/memory.hpp>
+#include <pfs/modulus2/modulus2.hpp>
+#include <pfs/modulus2/iostream_logger.hpp>
+#include <pfs/debby/in_memory.hpp>
+#include <pfs/debby/settings.hpp>
 #include <limits>
 
-using settings_t = debby::settings<debby::backend::in_memory::map_st>;
+using settings_t = debby::settings<debby::backend_enum::map_st>;
 using modulus2_t = modulus::modulus2<modulus::iostream_logger, settings_t>;
 
 class m1 : public modulus2_t::regular_module

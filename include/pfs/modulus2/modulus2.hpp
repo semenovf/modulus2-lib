@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2023 Vladislav Trifochkin
+// Copyright (c) 2019-2025 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
@@ -10,18 +10,19 @@
 //      2023.02.09 Settings is a template parameter now (not a plugin).
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/modulus2/plugins/loader.hpp"
-#include "pfs/modulus2/plugins/module_lifetime.hpp"
-#include "pfs/modulus2/plugins/quit.hpp"
-#include "pfs/assert.hpp"
-#include "pfs/emitter.hpp"
-#include "pfs/error.hpp"
-#include "pfs/filesystem.hpp"
-#include "pfs/function_queue.hpp"
-#include "pfs/i18n.hpp"
-#include "pfs/memory.hpp"
-#include "pfs/string_view.hpp"
-#include "pfs/timer_pool.hpp"
+#include "namespace.hpp"
+#include <pfs/modulus2/plugins/loader.hpp>
+#include <pfs/modulus2/plugins/module_lifetime.hpp>
+#include <pfs/modulus2/plugins/quit.hpp>
+#include <pfs/assert.hpp>
+#include <pfs/emitter.hpp>
+#include <pfs/error.hpp>
+#include <pfs/filesystem.hpp>
+#include <pfs/function_queue.hpp>
+#include <pfs/i18n.hpp>
+#include <pfs/memory.hpp>
+#include <pfs/string_view.hpp>
+#include <pfs/timer_pool.hpp>
 #include <cstddef>
 #include <map>
 #include <string>
@@ -30,7 +31,7 @@
 #include <utility>
 #include <cassert>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 /**
  * Requirements for SettingsType (see null_settings for example)
@@ -1496,7 +1497,7 @@ struct modulus2
     };
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END
 
 #ifndef MODULUS2__MODULE_EXPORT
 #   if _MSC_VER

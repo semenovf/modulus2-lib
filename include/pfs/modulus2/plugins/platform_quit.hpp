@@ -9,10 +9,11 @@
 //      2022.07.05 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "../namespace.hpp"
 #include "posix_quit.hpp"
 #include "win32_quit.hpp"
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 #if MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
     using platform_quit_plugin = posix_quit_plugin;
@@ -22,4 +23,4 @@ namespace modulus {
     static_error(false, "Unsupported Platform for quit plugin");
 #endif
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

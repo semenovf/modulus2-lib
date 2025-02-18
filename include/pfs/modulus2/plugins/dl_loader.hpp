@@ -10,9 +10,10 @@
 //      2023.08.30 Added bundle class for use while module construction.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
+#include "../namespace.hpp"
 #include "loader.hpp"
-#include "pfs/dynamic_library.hpp"
-#include "pfs/i18n.hpp"
+#include <pfs/dynamic_library.hpp>
+#include <pfs/i18n.hpp>
 #include <memory>
 #include <utility>
 
@@ -20,7 +21,7 @@
 #   include <android/log.h>
 #endif
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 namespace fs = pfs::filesystem;
 
@@ -192,4 +193,4 @@ protected:
     }
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

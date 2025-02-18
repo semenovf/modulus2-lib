@@ -9,8 +9,9 @@
 //      2021.06.27 Initial version
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/emitter.hpp"
+#include "../namespace.hpp"
 #include "quit.hpp"
+#include <pfs/emitter.hpp>
 #include <algorithm>
 
 #if _POSIX_C_SOURCE || ANDROID
@@ -19,7 +20,7 @@
 #   include <csignal>
 #endif
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 #if MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
@@ -123,4 +124,4 @@ posix_quit_plugin * posix_quit_plugin::_instance {nullptr};
 
 #endif // MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

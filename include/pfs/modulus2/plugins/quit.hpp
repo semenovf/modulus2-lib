@@ -9,9 +9,10 @@
 //      2021.06.18 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/emitter.hpp"
+#include "../namespace.hpp"
+#include <pfs/emitter.hpp>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 class quit_plugin
 {
@@ -30,4 +31,4 @@ public:
     quit_plugin & operator = (quit_plugin &&) = delete;
 };
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

@@ -9,8 +9,9 @@
 //      2022.07.05 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/emitter.hpp"
+#include "../namespace.hpp"
 #include "quit.hpp"
+#include <pfs/emitter.hpp>
 #include <algorithm>
 
 #if _MSC_VER
@@ -19,7 +20,7 @@
 #   include <windows.h>
 #endif
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 #if MODULUS2__WIN32_CONSOLE_QUIT_PLUGIN_ENABLED
 
@@ -65,4 +66,4 @@ win32_quit_plugin* win32_quit_plugin::_instance {nullptr};
 
 #endif // MODULUS2__WIN32_CONSOLE_QUIT_PLUGIN_ENABLED
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END

@@ -9,11 +9,12 @@
 //      2021.06.30 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
-#include "pfs/split.hpp"
+#include "namespace.hpp"
+#include <pfs/split.hpp>
 #include <string>
 #include <vector>
 
-namespace modulus {
+MODULUS2__NAMESPACE_BEGIN
 
 inline std::string const_prefix () { return std::string{"C"}; }
 inline std::string ptr_prefix () { return std::string{"P"}; }
@@ -192,4 +193,4 @@ inline result_of_matching match_mangled_signatures (
     return result;
 }
 
-} // namespace modulus
+MODULUS2__NAMESPACE_END
