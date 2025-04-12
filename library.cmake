@@ -66,7 +66,7 @@ if (MODULUS2__ENABLE_SPDLOG)
         include(FetchContent)
         FetchContent_Declare(spdlog
             GIT_REPOSITORY https://github.com/gabime/spdlog.git
-            GIT_TAG v1.15.1
+            GIT_TAG v1.15.2
             SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/spdlog
             SUBBUILD_DIR ${CMAKE_BINARY_DIR}/3rdparty/spdlog)
 
