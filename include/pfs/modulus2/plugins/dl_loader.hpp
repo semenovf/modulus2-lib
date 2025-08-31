@@ -98,7 +98,7 @@ protected:
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "module not found: %s\n", dylib_path.c_str());
 #else
-            fmt::print(stderr, "module not found: {}\n", fs::utf8_encode(dylib_path));
+            fmt::print(stderr, "module not found: {}\n", pfs::utf8_encode_path(dylib_path));
 #endif
 
             return std::make_pair(module_pointer{nullptr, module_deleter{}}
@@ -143,7 +143,7 @@ protected:
 
         if (ctor_bundle_expected && ec2) {
             this->failure(tr::f_("{}: failed to resolve constructor `{}' for module: {}"
-                , fs::utf8_encode(dylib_path)
+                , pfs::utf8_encode_path(dylib_path)
                 , std::string(module_ctor_bundle_name)
                 , ec2.message()));
 
@@ -152,7 +152,7 @@ protected:
 
         if (!ctor_bundle_expected && ec1) {
             this->failure(tr::f_("{}: failed to resolve constructor `{}' for module: {}"
-                , fs::utf8_encode(dylib_path)
+                , pfs::utf8_encode_path(dylib_path)
                 , std::string(module_ctor_name)
                 , ec1.message()));
 
@@ -164,7 +164,7 @@ protected:
 
         if (ec) {
             this->failure(tr::f_("{}: failed to resolve destructor `{}' for module: {}"
-                , fs::utf8_encode(dylib_path)
+                , pfs::utf8_encode_path(dylib_path)
                 , std::string(module_dtor_name)
                 , ec.message()));
 
@@ -180,7 +180,7 @@ protected:
 
         return std::make_pair(module_pointer{ptr
             , module_deleter{new dynamic_module_deleter{dylib_ptr, module_dtor}}}
-            , fs::utf8_encode(dylib_path));
+            , pfs::utf8_encode_path(dylib_path));
     }
 
     template <typename ForwardPathIt>
