@@ -64,7 +64,7 @@ int main ()
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
     sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(
-        fs::utf8_encode(fs::temp_directory_path()
+        pfs::utf8_encode_path(fs::temp_directory_path()
             / PFS__LITERAL_PATH("modulus2_spdlog_logger_demo.log"))
         , 23, 59));
 
