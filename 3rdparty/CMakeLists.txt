@@ -10,11 +10,12 @@ include(FetchContent)
 
 if (MODULUS2__ENABLE_SPDLOG)
     if (NOT TARGET spdlog::spdlog)
+        set(SPDLOG_FMT_EXTERNAL_HO ON)
+
         if (MODULUS2__DISABLE_FETCH_CONTENT AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/spdlog/.git)
             add_subdirectory(spdlog 3rdparty/spdlog)
         else()
             set(FETCHCONTENT_UPDATES_DISCONNECTED_SPDLOG ON)
-            set(SPDLOG_FMT_EXTERNAL_HO ON)
 
             message(STATUS "Fetching spdlog ...")
             include(FetchContent)

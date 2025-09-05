@@ -1376,7 +1376,7 @@ struct modulus2
             return & _q;
         }
 
-        std::size_t void call ()
+        std::size_t call ()
         {
             return  _q.call();
         }

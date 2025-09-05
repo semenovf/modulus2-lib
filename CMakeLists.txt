@@ -44,8 +44,8 @@ if (NOT _archive_output_directory)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 endif()
 
+add_subdirectory(2ndparty) # Need before 3rdparty to share fmt library for spdlog
 add_subdirectory(3rdparty)
-add_subdirectory(2ndparty)
 include(${CMAKE_CURRENT_LIST_DIR}/library.cmake)
 
 if (MODULUS2__BUILD_TESTS AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests)
