@@ -1376,19 +1376,19 @@ struct modulus2
             return & _q;
         }
 
-        void call_all ()
+        std::size_t void call ()
         {
-            _q.call_all();
+            return  _q.call();
         }
 
-        void call ()
+        std::size_t call (int max_count)
         {
-            _q.call();
+            return _q.call(max_count);
         }
 
-        void call (int max_count)
+        std::size_t call_all ()
         {
-            _q.call(max_count);
+            return _q.call_all();
         }
 
         void wait ()

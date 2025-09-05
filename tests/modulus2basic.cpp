@@ -278,8 +278,8 @@ public:
     modulus2_type::exit_status run () override
     {
         while (! is_quit()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            call_all();
+            if (call_all() == 0)
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
         quit();
