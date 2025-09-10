@@ -23,13 +23,14 @@
 #include <pfs/memory.hpp>
 #include <pfs/string_view.hpp>
 #include <pfs/timer_pool.hpp>
+#include <cassert>
+#include <stdexcept>
 #include <cstddef>
 #include <map>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <utility>
-#include <cassert>
 
 MODULUS2__NAMESPACE_BEGIN
 
@@ -314,6 +315,9 @@ struct modulus2
             return this->get_dispatcher().settings();
         }
 
+        /**
+         * Used to enqueue an action into own queue for later processing.
+         */
         template <typename F, typename ...Args>
         void enqueue (F && f, Args &&... args)
         {
@@ -321,6 +325,8 @@ struct modulus2
 
             if (q)
                 q->push(std::forward<F>(f), std::forward<Args>(args)...);
+            else
+                throw std::runtime_error(tr::_("enqueue action into a module without a queue is prohibited"));
         }
 
     protected:
@@ -468,9 +474,10 @@ struct modulus2
                 using emitter_traits = __emitter_traits<F>;
 
                 auto em = reinterpret_cast<typename emitter_traits::type *>(it->second);
+                auto q = m.queue();
 
-                if (m.queue())
-                    em->connect(*m.queue(), f);
+                if (q != nullptr)
+                    em->connect(*q, f);
                 else
                     em->connect(f);
 
@@ -479,7 +486,6 @@ struct modulus2
 
             return false;
         }
-
 
     private:
         friend class dispatcher;
@@ -1368,6 +1374,7 @@ struct modulus2
         friend class dispatcher;
         friend class module_context;
 
+    protected:
         mutable function_queue_type _q;
 
     protected:
@@ -1399,6 +1406,20 @@ struct modulus2
         bool wait_for (std::chrono::microseconds microseconds)
         {
             return _q.wait_for(microseconds.count());
+        }
+
+        exit_status run () override
+        {
+            while (! this->is_quit()) {
+                if (_q.empty()) {
+                    if (_q.wait_for(500000))
+                        this->call_all();
+                } else {
+                    this->call_all();
+                }
+            }
+
+            return exit_status::success;
         }
 
     public:

@@ -461,6 +461,57 @@ public:
     }
 };
 
+
+class m7 : public modulus2_type::runnable_module
+{
+    int _counter = 0;
+
+private:
+    bool on_start () override
+    {
+        log_debug("on_start()");
+
+        start_timer(std::chrono::milliseconds(300), [] {
+            __timer_counter++;
+        });
+
+        return true;
+    }
+
+    bool on_finish () override
+    {
+        log_debug("on_finish()");
+        return true;
+    }
+
+    void flush () override
+    {}
+
+public:
+    m7 () {}
+
+    ~m7 ()
+    {
+        CHECK(_counter == 2);
+    }
+
+    bool connect_detector (modulus2_type::api_id_type id, modulus2_type::module_context & ctx) override
+    {
+        switch (id) {
+            case 0:
+                return ctx.connect_detector(id, *this, [this] () {
+                    _counter++;
+                });
+            case 1:
+                return ctx.connect_detector(id, *this, [this] (bool) {
+                    _counter++;
+                });
+        }
+
+        return false;
+    }
+};
+
 TEST_CASE("Modulus2 basics") {
     using exit_status = modulus2_type::exit_status;
     modulus2_type::dispatcher d{iostream_logger{}, null_settings{}};
@@ -477,10 +528,11 @@ TEST_CASE("Modulus2 basics") {
     CHECK(d.register_module<m4>(std::make_pair("m4", "m3")));
     CHECK(d.register_module<m5>(std::make_pair("m5", "")));
     CHECK(d.register_module<m6>(std::make_pair("m6", "m3")));
+    CHECK(d.register_module<m7>(std::make_pair("m7", "")));
 
-    CHECK(d.count() == 6);
+    CHECK(d.count() == 7);
 
     d.attach_plugin(timer_quit_plugin);
     CHECK(d.exec() == exit_status::success);
-    CHECK_EQ(__timer_counter, 5);
+    CHECK_EQ(__timer_counter, 6);
 }

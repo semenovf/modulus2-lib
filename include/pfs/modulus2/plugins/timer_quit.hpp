@@ -34,9 +34,7 @@ public:
                 std::unique_lock<std::mutex> locker(_mtx);
 
                 auto reason = _cond.wait_for(locker, std::chrono::seconds(seconds)
-                    , [&] {
-                        return _terminate;
-                    });
+                    , [&] { return _terminate; });
 
                 this->quit(-1);
 
