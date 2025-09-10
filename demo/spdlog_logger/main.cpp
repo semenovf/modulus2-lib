@@ -18,7 +18,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/daily_file_sink.h"
 
-#if defined(ANDROID)
+#if defined(__ANDROID__)
 #   include "spdlog/sinks/android_sink.h"
 #endif
 
@@ -68,7 +68,7 @@ int main ()
             / PFS__LITERAL_PATH("modulus2_spdlog_logger_demo.log"))
         , 23, 59));
 
-#if defined(ANDROID)
+#if defined(__ANDROID__)
     std::string tag = "modulus2_spdlog_logger_demo";
     sinks.push_back(std::make_shared<spdlog::sinks::android_sink_mt>(tag));
 #endif

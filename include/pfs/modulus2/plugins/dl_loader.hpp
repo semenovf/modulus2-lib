@@ -17,7 +17,7 @@
 #include <memory>
 #include <utility>
 
-#if ANDROID
+#if __ANDROID__
 #   include <android/log.h>
 #endif
 
@@ -94,7 +94,7 @@ protected:
 
         if (!fs::exists(dylib_path)) {
             // This is a critical section, so log output must not depends on logger
-#if ANDROID
+#if __ANDROID__
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "module not found: %s\n", dylib_path.c_str());
 #else
@@ -104,7 +104,7 @@ protected:
             return std::make_pair(module_pointer{nullptr, module_deleter{}}
                 , std::string{});
         } else {
-#if ANDROID
+#if __ANDROID__
             __android_log_print(ANDROID_LOG_DEBUG, "modulus"
                 , "module found: %s\n", dylib_path.c_str());
 #endif
@@ -116,7 +116,7 @@ protected:
             dylib_ptr = std::make_shared<pfs::dynamic_library>(dylib_path);
         } catch (pfs::error ex) {
             // This is a critical section, so log output must not depends on logger
-#if ANDROID
+#if __ANDROID__
             __android_log_print(ANDROID_LOG_ERROR, "modulus"
                 , "%s\n", ex.what());
 #else

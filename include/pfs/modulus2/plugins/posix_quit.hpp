@@ -14,7 +14,7 @@
 #include <pfs/emitter.hpp>
 #include <algorithm>
 
-#if _POSIX_C_SOURCE || ANDROID
+#if _POSIX_C_SOURCE || __ANDROID__
 #   define MODULUS2__POSIX_QUIT_PLUGIN_ENABLED 1
 #   include <cassert>
 #   include <csignal>
