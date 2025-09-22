@@ -1009,27 +1009,27 @@ struct modulus
     ////////////////////////////////////////////////////////////////////////////
         void log_trace (basic_module const * m, string_type const & s)
         {
-            (this->*_log_printer)(& logger_type::trace, m, s);
+            (this->*_log_printer)(& logger_type::t, m, s);
         }
 
         void log_debug (basic_module const * m, string_type const & s)
         {
-            (this->*_log_printer)(& logger_type::debug, m, s);
+            (this->*_log_printer)(& logger_type::d, m, s);
         }
 
         void log_info (basic_module const * m, string_type const & s)
         {
-            (this->*_log_printer)(& logger_type::info, m, s);
+            (this->*_log_printer)(& logger_type::i, m, s);
         }
 
         void log_warn (basic_module const * m, string_type const & s)
         {
-            (this->*_log_printer)(& logger_type::warn, m, s);
+            (this->*_log_printer)(& logger_type::w, m, s);
         }
 
         void log_error (basic_module const * m, string_type const & s)
         {
-            (this->*_log_printer)(& logger_type::error, m, s);
+            (this->*_log_printer)(& logger_type::e, m, s);
         }
 
         void log_trace (string_type const & s)
@@ -1520,10 +1520,10 @@ struct modulus
 
 MODULUS__NAMESPACE_END
 
-#ifndef MODULUS2__MODULE_EXPORT
+#ifndef MODULUS__MODULE_EXPORT
 #   if _MSC_VER
-#       define MODULUS2__MODULE_EXPORT __declspec(dllexport)
+#       define MODULUS__MODULE_EXPORT __declspec(dllexport)
 #   else
-#       define MODULUS2__MODULE_EXPORT
+#       define MODULUS__MODULE_EXPORT
 #   endif
-#endif // !MODULUS2__MODULE_EXPORT
+#endif // !MODULUS__MODULE_EXPORT

@@ -32,7 +32,7 @@ public:
 
 extern "C" {
 
-MODULUS2__MODULE_EXPORT modulus_t::basic_module * __module_ctor_bundle__ (modulus::bundle const & args)
+MODULUS__MODULE_EXPORT modulus_t::basic_module * __module_ctor_bundle__ (modulus::bundle const & args)
 {
     auto m = new m3;
     std::cout << "+Construct m3 ("
@@ -42,7 +42,7 @@ MODULUS2__MODULE_EXPORT modulus_t::basic_module * __module_ctor_bundle__ (modulu
     return m;
 }
 
-MODULUS2__MODULE_EXPORT void  __module_dtor__ (modulus_t::basic_module * m)
+MODULUS__MODULE_EXPORT void  __module_dtor__ (modulus_t::basic_module * m)
 {
     std::cout << "~Destruct 'm3'\n";
     delete m;

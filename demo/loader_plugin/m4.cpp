@@ -26,14 +26,14 @@ public:
 
 extern "C" {
 
-MODULUS2__MODULE_EXPORT modulus_t::basic_module * __module_ctor__ (void)
+MODULUS__MODULE_EXPORT modulus_t::basic_module * __module_ctor__ (void)
 {
     std::cout << "+Construct m4\n";
     auto m = new m4;
     return m;
 }
 
-MODULUS2__MODULE_EXPORT void  __module_dtor__ (modulus_t::basic_module * m)
+MODULUS__MODULE_EXPORT void  __module_dtor__ (modulus_t::basic_module * m)
 {
     std::cout << "~Destruct 'm4'\n";
     delete m;

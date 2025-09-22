@@ -17,27 +17,27 @@ MODULUS__NAMESPACE_BEGIN
 class iostream_logger
 {
 public:
-    void trace (std::string const & msg)
+    void t (std::string const & msg)
     {
         std::cout << "~~ " << msg.c_str() << "\n";
     }
 
-    void debug (std::string const & msg)
+    void d (std::string const & msg)
     {
         std::cout << "-- " << msg.c_str() << "\n";
     }
 
-    void info (std::string const & msg)
+    void i (std::string const & msg)
     {
         std::cout << msg.c_str() << "\n";
     }
 
-    void warn (std::string const & msg)
+    void w (std::string const & msg)
     {
         std::cerr << "WARN: " << msg.c_str() << "\n";
     }
 
-    void error (std::string const & msg)
+    void e (std::string const & msg)
     {
         std::cerr << "ERROR: " << msg.c_str() << "\n";
     }
@@ -46,22 +46,27 @@ public:
 class wiostream_logger
 {
 public:
-    void info (std::wstring const & msg)
+    void t (std::wstring const & msg)
     {
-        std::wcout << msg.c_str() << "\n";
+        std::wcout << L"~~ " << msg.c_str() << L"\n";
     }
 
-    void debug (std::wstring const & msg)
+    void d (std::wstring const & msg)
     {
         std::wcout << L"-- " << msg.c_str() << L"\n";
     }
 
-    void warn (std::wstring const & msg)
+    void i (std::wstring const & msg)
+    {
+        std::wcout << msg.c_str() << "\n";
+    }
+
+    void w (std::wstring const & msg)
     {
         std::wcerr << L"WARN: " << msg.c_str() << L"\n";
     }
 
-    void error (std::wstring const & msg)
+    void e (std::wstring const & msg)
     {
         std::wcerr << L"ERROR: " << msg.c_str() << L"\n";
     }
