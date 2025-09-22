@@ -24,7 +24,7 @@ MODULUS2__NAMESPACE_BEGIN
 
 #if MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
-enum  {
+enum {
     // SIGHUP  - Hangup detected on controlling terminal
     // or death of controlling process
       hangup_detected = 0x0001
