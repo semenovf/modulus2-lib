@@ -12,7 +12,7 @@
 #include "../namespace.hpp"
 #include <pfs/emitter.hpp>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 class quit_plugin
 {
@@ -31,4 +31,4 @@ public:
     quit_plugin & operator = (quit_plugin &&) = delete;
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

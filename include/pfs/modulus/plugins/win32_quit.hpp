@@ -20,7 +20,7 @@
 #   include <windows.h>
 #endif
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 #if MODULUS2__WIN32_CONSOLE_QUIT_PLUGIN_ENABLED
 
@@ -66,4 +66,4 @@ win32_quit_plugin* win32_quit_plugin::_instance {nullptr};
 
 #endif // MODULUS2__WIN32_CONSOLE_QUIT_PLUGIN_ENABLED
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

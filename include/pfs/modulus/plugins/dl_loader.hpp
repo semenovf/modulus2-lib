@@ -21,7 +21,7 @@
 #   include <android/log.h>
 #endif
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 namespace fs = pfs::filesystem;
 
@@ -193,4 +193,4 @@ protected:
     }
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

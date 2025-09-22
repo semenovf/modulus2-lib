@@ -10,27 +10,22 @@
 #                 Min CMake version is 3.19.
 ################################################################################
 cmake_minimum_required (VERSION 3.19)
-project(modulus2
-    VERSION 1.0.0
-    DESCRIPTION "Modulus2 C++ library"
+project(modulus
+    VERSION 3.0.0
+    DESCRIPTION "Modulus C++ library"
     LANGUAGES CXX C)
 
-add_library(modulus2 INTERFACE)
-add_library(pfs::modulus2 ALIAS modulus2)
+add_library(modulus INTERFACE)
+add_library(pfs::modulus ALIAS modulus)
 
 if (MSVC)
-    target_compile_definitions(modulus2 INTERFACE _CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(modulus INTERFACE _CRT_SECURE_NO_WARNINGS)
 endif()
 
-target_include_directories(modulus2 INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(modulus INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_link_libraries(modulus2 INTERFACE pfs::common)
+target_link_libraries(modulus INTERFACE pfs::common)
 
-if (MODULUS2__ENABLE_DEBBY)
-    target_link_libraries(modulus2 INTERFACE pfs::debby)
-endif()
-
-if (MODULUS2__ENABLE_SPDLOG)
-    target_compile_definitions(modulus2 INTERFACE "MODULUS2__SPDLOG_ENABLED=1")
-    target_link_libraries(modulus2 INTERFACE spdlog::spdlog)
+if (MODULUS__ENABLE_DEBBY)
+    target_link_libraries(modulus INTERFACE pfs::debby)
 endif()

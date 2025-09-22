@@ -14,7 +14,7 @@
 #include <string>
 #include <unordered_map>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 class bundle
 {
@@ -66,4 +66,4 @@ public:
     }
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

@@ -20,7 +20,7 @@
 #   include <csignal>
 #endif
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 #if MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
@@ -124,4 +124,4 @@ posix_quit_plugin * posix_quit_plugin::_instance {nullptr};
 
 #endif // MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

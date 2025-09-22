@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "pfs/modulus2/mangling.hpp"
+#include "pfs/modulus/mangling.hpp"
 
 using namespace modulus;
 

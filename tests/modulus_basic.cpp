@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2022 Vladislav Trifochkin
+// Copyright (c) 2019-2025 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
@@ -10,16 +10,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "pfs/modulus2/modulus2.hpp"
-#include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/plugins/timer_quit.hpp"
+#include "pfs/modulus/modulus.hpp"
+#include "pfs/modulus/iostream_logger.hpp"
+#include "pfs/modulus/plugins/timer_quit.hpp"
 
-using namespace modulus;
-using modulus2_type = modulus2<iostream_logger, null_settings>;
+using modulus_t = modulus::modulus<modulus::iostream_logger, modulus::null_settings>;
 
 std::atomic_int __timer_counter {0};
 
-class custom_module_lifetime_plugin: public module_lifetime_plugin
+class custom_module_lifetime_plugin: public modulus::module_lifetime_plugin
 {
     std::string _prefix {"++ Lifetime plugin: "};
 
@@ -41,18 +40,18 @@ struct Data
     std::string value {"b"};
 };
 
-class m1 : public modulus2_type::regular_module
+class m1 : public modulus_t::regular_module
 {
     int _counter = 0;
 
-    modulus2_type::emitter_type<> emitZeroArg;
-    modulus2_type::emitter_type<bool> emitOneArg;
-    modulus2_type::emitter_type<bool, char> emitTwoArgs;
-    modulus2_type::emitter_type<bool, char, short> emitThreeArgs;
-    modulus2_type::emitter_type<bool, char, short, int> emitFourArgs;
-    modulus2_type::emitter_type<bool, char, short, int, long> emitFiveArgs;
-    modulus2_type::emitter_type<bool, char, short, int, long, std::string> emitSixArgs;
-    modulus2_type::emitter_type<Data> emitData;
+    modulus_t::emitter_type<> emitZeroArg;
+    modulus_t::emitter_type<bool> emitOneArg;
+    modulus_t::emitter_type<bool, char> emitTwoArgs;
+    modulus_t::emitter_type<bool, char, short> emitThreeArgs;
+    modulus_t::emitter_type<bool, char, short, int> emitFourArgs;
+    modulus_t::emitter_type<bool, char, short, int, long> emitFiveArgs;
+    modulus_t::emitter_type<bool, char, short, int, long, std::string> emitSixArgs;
+    modulus_t::emitter_type<Data> emitData;
 
 private:
     bool on_start () override
@@ -110,7 +109,7 @@ public:
         CHECK(_counter == 1);
     }
 
-    void declare_emitters (modulus2_type::module_context & ctx) override
+    void declare_emitters (modulus_t::module_context & ctx) override
     {
         ctx.declare_emitter(0, emitZeroArg);
         ctx.declare_emitter(1, emitOneArg);
@@ -122,8 +121,8 @@ public:
         ctx.declare_emitter(7, emitData);
     }
 
-    bool connect_detector (modulus2_type::api_id_type id
-        , modulus2_type::module_context & ctx) override
+    bool connect_detector (modulus_t::api_id_type id
+        , modulus_t::module_context & ctx) override
     {
         switch (id) {
             case 4:
@@ -142,7 +141,7 @@ private:
     }
 };
 
-class m2 : public modulus2_type::regular_module
+class m2 : public modulus_t::regular_module
 {
     int _counter = 0;
 
@@ -172,8 +171,8 @@ public:
         CHECK(_counter == 8);
     }
 
-    bool connect_detector (modulus2_type::api_id_type id
-        , modulus2_type::module_context & ctx) override
+    bool connect_detector (modulus_t::api_id_type id
+        , modulus_t::module_context & ctx) override
     {
         switch (id) {
             case 0:
@@ -252,7 +251,7 @@ private:
     }
 };
 
-class m3 : public modulus2_type::runnable_module
+class m3 : public modulus_t::runnable_module
 {
 private:
     bool on_start () override
@@ -275,7 +274,7 @@ private:
 public:
     m3 (int, std::string const &) {}
 
-    modulus2_type::exit_status run () override
+    modulus_t::exit_status run () override
     {
         while (! is_quit()) {
             if (call_all() == 0)
@@ -284,14 +283,14 @@ public:
 
         quit();
 
-        return modulus2_type::exit_status::success;
+        return modulus_t::exit_status::success;
     }
 };
 
-class m4 : public modulus2_type::guest_module
+class m4 : public modulus_t::guest_module
 {
-    modulus2_type::emitter_type<bool> emitOneArg;
-    modulus2_type::emitter_type<bool, char> emitTwoArgs;
+    modulus_t::emitter_type<bool> emitOneArg;
+    modulus_t::emitter_type<bool, char> emitTwoArgs;
 
     int _counter = 0;
 
@@ -321,14 +320,14 @@ public:
         CHECK(_counter == 3);
     }
 
-    void declare_emitters (modulus2_type::module_context & ctx) override
+    void declare_emitters (modulus_t::module_context & ctx) override
     {
         ctx.declare_emitter(1, emitOneArg);
         ctx.declare_emitter(2, emitTwoArgs);
     }
 
-    bool connect_detector (modulus2_type::api_id_type id
-        , modulus2_type::module_context & ctx) override
+    bool connect_detector (modulus_t::api_id_type id
+        , modulus_t::module_context & ctx) override
     {
         switch (id) {
             case 1:
@@ -364,10 +363,10 @@ private:
     }
 };
 
-class m5 : public modulus2_type::guest_module
+class m5 : public modulus_t::guest_module
 {
-    modulus2_type::emitter_type<> emitZeroArg;
-    modulus2_type::emitter_type<bool> emitOneArg;
+    modulus_t::emitter_type<> emitZeroArg;
+    modulus_t::emitter_type<bool> emitOneArg;
 
     int _counter = 0;
 
@@ -397,14 +396,13 @@ public:
         CHECK(_counter == 2);
     }
 
-    void declare_emitters (modulus2_type::module_context & ctx) override
+    void declare_emitters (modulus_t::module_context & ctx) override
     {
         ctx.declare_emitter(0, emitZeroArg);
         ctx.declare_emitter(1, emitOneArg);
     }
 
-    bool connect_detector (modulus2_type::api_id_type id
-        , modulus2_type::module_context & ctx) override
+    bool connect_detector (modulus_t::api_id_type id, modulus_t::module_context & ctx) override
     {
         switch (id) {
             case 0:
@@ -432,7 +430,7 @@ private:
 //
 // For testing lambda as detector
 //
-class m6 : public modulus2_type::guest_module
+class m6 : public modulus_t::guest_module
 {
     int _counter = 0;
 
@@ -444,7 +442,7 @@ public:
         CHECK(_counter == 2);
     }
 
-    bool connect_detector (modulus2_type::api_id_type id, modulus2_type::module_context & ctx) override
+    bool connect_detector (modulus_t::api_id_type id, modulus_t::module_context & ctx) override
     {
         switch (id) {
             case 0:
@@ -462,7 +460,7 @@ public:
 };
 
 
-class m7 : public modulus2_type::runnable_module
+class m7 : public modulus_t::runnable_module
 {
     int _counter = 0;
 
@@ -495,7 +493,7 @@ public:
         CHECK(_counter == 2);
     }
 
-    bool connect_detector (modulus2_type::api_id_type id, modulus2_type::module_context & ctx) override
+    bool connect_detector (modulus_t::api_id_type id, modulus_t::module_context & ctx) override
     {
         switch (id) {
             case 0:
@@ -512,12 +510,12 @@ public:
     }
 };
 
-TEST_CASE("Modulus2 basics") {
-    using exit_status = modulus2_type::exit_status;
-    modulus2_type::dispatcher d{iostream_logger{}, null_settings{}};
+TEST_CASE("Modulus basics") {
+    using exit_status = modulus_t::exit_status;
+    modulus_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
 
     int timeout = 2; // seconds
-    timer_quit_plugin timer_quit_plugin {timeout};
+    modulus::timer_quit_plugin timer_quit_plugin {timeout};
 
     custom_module_lifetime_plugin lifetime_plugin;
     d.attach_plugin(lifetime_plugin);

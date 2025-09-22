@@ -13,7 +13,7 @@
 #include "posix_quit.hpp"
 #include "win32_quit.hpp"
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 #if MODULUS2__POSIX_QUIT_PLUGIN_ENABLED
     using platform_quit_plugin = posix_quit_plugin;
@@ -23,4 +23,4 @@ MODULUS2__NAMESPACE_BEGIN
     static_error(false, "Unsupported Platform for quit plugin");
 #endif
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

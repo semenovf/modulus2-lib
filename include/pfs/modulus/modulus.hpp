@@ -11,9 +11,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "namespace.hpp"
-#include <pfs/modulus2/plugins/loader.hpp>
-#include <pfs/modulus2/plugins/module_lifetime.hpp>
-#include <pfs/modulus2/plugins/quit.hpp>
+#include <pfs/modulus/plugins/loader.hpp>
+#include <pfs/modulus/plugins/module_lifetime.hpp>
+#include <pfs/modulus/plugins/quit.hpp>
 #include <pfs/assert.hpp>
 #include <pfs/emitter.hpp>
 #include <pfs/error.hpp>
@@ -32,7 +32,7 @@
 #include <type_traits>
 #include <utility>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 /**
  * Requirements for SettingsType (see null_settings for example)
@@ -77,7 +77,7 @@ public:
 template <typename LoggerType
     , typename SettingsType
     , typename ApiIdType = int>
-struct modulus2
+struct modulus
 {
     using logger_type = LoggerType;
     using settings_type = SettingsType;
@@ -547,7 +547,7 @@ struct modulus2
         friend class guest_module;
 
         using timer_pool_type = pfs::timer_pool;
-        using string_type = modulus2::string_type;
+        using string_type = modulus::string_type;
         using module_context_map_type = typename module_context::map_type;
         using thread_pool_type = std::list<std::thread>;
 
@@ -567,7 +567,7 @@ struct modulus2
         ////////////////////////////////////////////////////////////////////////
         // Loader specific data, signals and slots
         ////////////////////////////////////////////////////////////////////////
-        std::vector<loader_plugin<modulus2> *> _loaders;
+        std::vector<loader_plugin<modulus> *> _loaders;
 
         mutable function_queue_type      _q;
         std::unique_ptr<timer_pool_type> _timer_pool_ptr;
@@ -988,7 +988,7 @@ struct modulus2
             module_unregistered.connect(plugin, & plugin_type::module_unregistered);
         }
 
-        void attach_plugin (loader_plugin<modulus2> & plugin)
+        void attach_plugin (loader_plugin<modulus> & plugin)
         {
             _loaders.push_back(& plugin);
             plugin.failure.connect(*this, & dispatcher::log_error);
@@ -1518,7 +1518,7 @@ struct modulus2
     };
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END
 
 #ifndef MODULUS2__MODULE_EXPORT
 #   if _MSC_VER

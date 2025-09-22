@@ -10,13 +10,13 @@ include(FetchContent)
 
 list(APPEND _deps common)
 
-if (MODULUS2__ENABLE_DEBBY)
+if (MODULUS__ENABLE_DEBBY)
     list(APPEND _deps debby)
 endif()
 
 foreach (_dep ${_deps})
     if (NOT TARGET ${_dep})
-        if (MODULUS2__DISABLE_FETCH_CONTENT AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/${_dep}/.git)
+        if (MODULUS__DISABLE_FETCH_CONTENT AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/${_dep}/.git)
             add_subdirectory(${_dep})
         else()
             message(STATUS "Fetching ${_dep} ...")

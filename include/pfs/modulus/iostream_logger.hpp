@@ -12,7 +12,7 @@
 #include "namespace.hpp"
 #include <iostream>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 class iostream_logger
 {
@@ -67,4 +67,4 @@ public:
     }
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

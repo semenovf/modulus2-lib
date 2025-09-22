@@ -15,7 +15,7 @@
 #include <memory>
 #include <thread>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 class timer_quit_plugin : public quit_plugin
 {
@@ -64,4 +64,4 @@ public:
     }
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

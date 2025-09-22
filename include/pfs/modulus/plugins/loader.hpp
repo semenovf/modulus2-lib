@@ -16,7 +16,7 @@
 #include <pfs/filesystem.hpp>
 #include <string>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 namespace fs = pfs::filesystem;
 
@@ -48,4 +48,4 @@ public:
     loader_plugin & operator = (loader_plugin &&) = delete;
 };
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

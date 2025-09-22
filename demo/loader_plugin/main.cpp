@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2022 Vladislav Trifochkin
+// Copyright (c) 2019-2025 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
@@ -8,21 +8,21 @@
 // Changelog:
 //      2021.07.10 Initial version.
 ////////////////////////////////////////////////////////////////////////////////
-#include "pfs/modulus2/modulus2.hpp"
-#include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/plugins/platform_quit.hpp"
-#include "pfs/modulus2/plugins/dl_loader.hpp"
+#include "pfs/modulus/modulus.hpp"
+#include "pfs/modulus/iostream_logger.hpp"
+#include "pfs/modulus/plugins/platform_quit.hpp"
+#include "pfs/modulus/plugins/dl_loader.hpp"
 
-using modulus2_type = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
+using modulus_t = modulus::modulus<modulus::iostream_logger, modulus::null_settings>;
 
 int main (int argc, char * argv[])
 {
-    using exit_status = modulus2_type::exit_status;
+    using exit_status = modulus_t::exit_status;
 
     modulus::platform_quit_plugin quit_plugin;
-    modulus::dl_loader_plugin<modulus2_type> dl_loader_plugin;
+    modulus::dl_loader_plugin<modulus_t> dl_loader_plugin;
 
-    modulus2_type::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
+    modulus_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
 
     // Module m4 will be ignored
     d.ignore_module_on_start_failure(true);

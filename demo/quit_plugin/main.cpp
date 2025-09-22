@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2022 Vladislav Trifochkin
+// Copyright (c) 2019-2025 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
@@ -8,25 +8,25 @@
 // Changelog:
 //      2021.06.18 Initial version
 ////////////////////////////////////////////////////////////////////////////////
-#include "pfs/modulus2/modulus2.hpp"
-#include "pfs/modulus2/iostream_logger.hpp"
-#include "pfs/modulus2/plugins/platform_quit.hpp"
-#include "pfs/modulus2/plugins/timer_quit.hpp"
+#include "pfs/modulus/modulus.hpp"
+#include "pfs/modulus/iostream_logger.hpp"
+#include "pfs/modulus/plugins/platform_quit.hpp"
+#include "pfs/modulus/plugins/timer_quit.hpp"
 #include <chrono>
 #include <thread>
 #include <iostream>
 
-using modulus2_t = modulus::modulus2<modulus::iostream_logger, modulus::null_settings>;
+using modulus_t = modulus::modulus<modulus::iostream_logger, modulus::null_settings>;
 
 int main ()
 {
-    using exit_status = modulus2_t::exit_status;
+    using exit_status = modulus_t::exit_status;
 
     int timeout = 5; // seconds
     modulus::timer_quit_plugin timer_quit_plugin {timeout};
     modulus::platform_quit_plugin quit_plugin;
 
-    modulus2_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
+    modulus_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
 
     d.attach_plugin(timer_quit_plugin);
     d.attach_plugin(quit_plugin);

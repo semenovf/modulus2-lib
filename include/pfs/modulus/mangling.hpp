@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-MODULUS2__NAMESPACE_BEGIN
+MODULUS__NAMESPACE_BEGIN
 
 inline std::string const_prefix () { return std::string{"C"}; }
 inline std::string ptr_prefix () { return std::string{"P"}; }
@@ -193,4 +193,4 @@ inline result_of_matching match_mangled_signatures (
     return result;
 }
 
-MODULUS2__NAMESPACE_END
+MODULUS__NAMESPACE_END

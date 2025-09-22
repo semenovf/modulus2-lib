@@ -10,8 +10,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#ifndef MODULUS2__NAMESPACE_NAME
-#   define MODULUS2__NAMESPACE_NAME modulus
-#   define MODULUS2__NAMESPACE_BEGIN namespace MODULUS2__NAMESPACE_NAME {
-#   define MODULUS2__NAMESPACE_END }
+#ifndef MODULUS__NAMESPACE_NAME
+#   define MODULUS__NAMESPACE_NAME modulus
+#   define MODULUS__NAMESPACE_BEGIN namespace MODULUS__NAMESPACE_NAME {
+#   define MODULUS__NAMESPACE_END }
 #endif

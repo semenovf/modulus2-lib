@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019-2022 Vladislav Trifochkin
+// Copyright (c) 2019-2025 Vladislav Trifochkin
 //
 // License: see LICENSE file
 //
@@ -14,16 +14,16 @@
 #include "doctest.h"
 #include <pfs/filesystem.hpp>
 #include <pfs/memory.hpp>
-#include <pfs/modulus2/modulus2.hpp>
-#include <pfs/modulus2/iostream_logger.hpp>
+#include <pfs/modulus/modulus.hpp>
+#include <pfs/modulus/iostream_logger.hpp>
 #include <pfs/debby/in_memory.hpp>
 #include <pfs/debby/settings.hpp>
 #include <limits>
 
 using settings_t = debby::settings<debby::backend_enum::map_st>;
-using modulus2_t = modulus::modulus2<modulus::iostream_logger, settings_t>;
+using modulus_t = modulus::modulus<modulus::iostream_logger, settings_t>;
 
-class m1 : public modulus2_t::regular_module
+class m1 : public modulus_t::regular_module
 {
 private:
     bool on_start () override
@@ -77,15 +77,11 @@ private:
 
 TEST_CASE("settings")
 {
-    using exit_status = modulus2_t::exit_status;
+    using exit_status = modulus_t::exit_status;
     settings_t settings = settings_t::make();
-    modulus2_t::dispatcher d{modulus::iostream_logger{}, std::move(settings)};
+    modulus_t::dispatcher d{modulus::iostream_logger{}, std::move(settings)};
 
     CHECK(d.register_module<m1>(std::make_pair("m1", "")));
 
     d.exec();
-
-#if MODULUS2__ROCKSDB_ENABLED
-    pfs::filesystem::path rocksdb_path;
-#endif
 }
