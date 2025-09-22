@@ -26,7 +26,7 @@ int main ()
     modulus::timer_quit_plugin timer_quit_plugin {timeout};
     modulus::platform_quit_plugin quit_plugin;
 
-    modulus_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
+    modulus_t::dispatcher d{std::make_shared<modulus::iostream_logger>(), modulus::null_settings{}};
 
     d.attach_plugin(timer_quit_plugin);
     d.attach_plugin(quit_plugin);

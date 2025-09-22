@@ -512,7 +512,7 @@ public:
 
 TEST_CASE("Modulus basics") {
     using exit_status = modulus_t::exit_status;
-    modulus_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
+    modulus_t::dispatcher d{std::make_shared<modulus::iostream_logger>(), modulus::null_settings{}};
 
     int timeout = 2; // seconds
     modulus::timer_quit_plugin timer_quit_plugin {timeout};

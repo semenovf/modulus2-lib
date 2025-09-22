@@ -79,7 +79,7 @@ TEST_CASE("settings")
 {
     using exit_status = modulus_t::exit_status;
     settings_t settings = settings_t::make();
-    modulus_t::dispatcher d{modulus::iostream_logger{}, std::move(settings)};
+    modulus_t::dispatcher d{std::make_shared<modulus::iostream_logger>(), std::move(settings)};
 
     CHECK(d.register_module<m1>(std::make_pair("m1", "")));
 

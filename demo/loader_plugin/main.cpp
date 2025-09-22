@@ -22,7 +22,7 @@ int main (int argc, char * argv[])
     modulus::platform_quit_plugin quit_plugin;
     modulus::dl_loader_plugin<modulus_t> dl_loader_plugin;
 
-    modulus_t::dispatcher d{modulus::iostream_logger{}, modulus::null_settings{}};
+    modulus_t::dispatcher d{std::make_shared<modulus::iostream_logger>(), modulus::null_settings{}};
 
     // Module m4 will be ignored
     d.ignore_module_on_start_failure(true);

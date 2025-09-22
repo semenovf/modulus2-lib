@@ -580,7 +580,7 @@ struct modulus
 
         string_type _main_thread_module; // Contains name of the module that
                                          // must be run in "main" thread
-        logger_type _logger;
+        std::shared_ptr<logger_type> _logger;
         settings_type _settings;
 
         // If true, the dispatcher ignores modules that return false in the on_start() method.
@@ -677,7 +677,7 @@ struct modulus
             , basic_module const * m
             , string_type const & s)
         {
-            (_logger.*log)(m ? m->name() + ": " + s : s);
+            ((*_logger).*log)(m ? m->name() + ": " + s : s);
         }
 
         // Logger backend for queued printing
@@ -685,7 +685,7 @@ struct modulus
             , basic_module const * m
             , string_type const & s)
         {
-            _q.push(log, & _logger, (m != 0 ? m->name() + ": " + s : s));
+            _q.push(log, _logger, (m != 0 ? m->name() + ": " + s : s));
         }
 
         bool register_module_helper (
@@ -925,14 +925,14 @@ struct modulus
         dispatcher (dispatcher &&) = delete;
         dispatcher & operator = (dispatcher &&) = delete;
 
-        dispatcher (logger_type && logger, settings_type && settings)
-            : _logger(std::move(logger))
+        dispatcher (std::shared_ptr<logger_type> logger, settings_type && settings)
+            : _logger(logger)
             , _settings(std::move(settings))
             , _log_printer(& dispatcher::direct_print)
         {}
 
-        dispatcher (logger_type && logger)
-            : _logger(std::move(logger))
+        dispatcher (std::shared_ptr<logger_type> logger)
+            : _logger(logger)
             , _log_printer(& dispatcher::direct_print)
         {}
 
